@@ -233,8 +233,8 @@ function renderBadges(badges) {
 
     // Categorize badges
     const earned = badges.filter(b => b.earned);
-    const locked = badges.filter(b => !b.earned && !b.secret);
-    const secret = badges.filter(b => b.secret && !b.earned);
+    const locked = badges.filter(b => !b.earned && !b.is_secret);
+    const secret = badges.filter(b => b.is_secret && !b.earned);
 
     // Update stats
     const rareCount = earned.filter(b => b.rarity === 'rare' || b.rarity === 'epic' || b.rarity === 'legendary').length;

@@ -3,7 +3,7 @@
 import json
 from datetime import UTC, datetime
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.session import SessionContext
@@ -574,7 +574,12 @@ class BadgeRepository:
         if category:
             query = query.filter(Badge.category == category)
 
-        return query.order_by(Badge.rarity, Badge.id).all()
+        rarity_order = case(
+            {"legendary": 0, "epic": 1, "rare": 2, "common": 3},
+            value=Badge.rarity,
+            else_=4,
+        )
+        return query.order_by(rarity_order, Badge.id).all()
 
     def get_badge(self, badge_id: str) -> Badge | None:
         """Get badge by ID"""
