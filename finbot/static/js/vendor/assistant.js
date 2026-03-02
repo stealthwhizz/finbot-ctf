@@ -47,6 +47,17 @@ async function initAssistant() {
     });
 
     await syncHistory();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillPrompt = urlParams.get('prompt');
+    if (prefillPrompt && prefillPrompt.trim()) {
+        window.history.replaceState({}, '', window.location.pathname);
+        input.value = prefillPrompt.trim();
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        sendBtn.disabled = false;
+        sendMessage(prefillPrompt.trim());
+    }
 }
 
 async function syncHistory() {

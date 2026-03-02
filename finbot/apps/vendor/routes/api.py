@@ -689,6 +689,72 @@ async def reprocess_invoice(
 
 
 # =============================================================================
+# Payment endpoints (vendor-scoped)
+# =============================================================================
+
+
+@router.get("/payments/summary")
+async def get_payment_summary(
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Get payment summary for current vendor -- stats and mock account balance."""
+    if not session_context.current_vendor_id:
+        raise HTTPException(status_code=400, detail="Vendor context required")
+
+    from finbot.mcp.servers.finstripe.repositories import PaymentTransactionRepository
+
+    db = next(get_db())
+    txn_repo = PaymentTransactionRepository(db, session_context)
+    transactions = txn_repo.list_for_vendor(session_context.current_vendor_id, limit=1000)
+
+    total_paid = sum(t.amount for t in transactions if t.status == "completed")
+    total_pending = sum(t.amount for t in transactions if t.status == "pending")
+    total_failed = sum(t.amount for t in transactions if t.status == "failed")
+
+    completed_count = sum(1 for t in transactions if t.status == "completed")
+    pending_count = sum(1 for t in transactions if t.status == "pending")
+    failed_count = sum(1 for t in transactions if t.status == "failed")
+
+    return {
+        "summary": {
+            "total_paid": total_paid,
+            "total_pending": total_pending,
+            "total_failed": total_failed,
+            "completed_count": completed_count,
+            "pending_count": pending_count,
+            "failed_count": failed_count,
+            "transaction_count": len(transactions),
+        },
+        "vendor_context": session_context.current_vendor,
+    }
+
+
+@router.get("/payments/transactions")
+async def get_payment_transactions(
+    limit: int = 50,
+    offset: int = 0,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """List payment transactions for current vendor."""
+    if not session_context.current_vendor_id:
+        raise HTTPException(status_code=400, detail="Vendor context required")
+
+    from finbot.mcp.servers.finstripe.repositories import PaymentTransactionRepository
+
+    db = next(get_db())
+    txn_repo = PaymentTransactionRepository(db, session_context)
+    transactions = txn_repo.list_for_vendor(
+        session_context.current_vendor_id, limit=limit, offset=offset
+    )
+
+    return {
+        "transactions": [t.to_dict() for t in transactions],
+        "total_count": len(transactions),
+        "vendor_context": session_context.current_vendor,
+    }
+
+
+# =============================================================================
 # Message endpoints (vendor-scoped)
 # =============================================================================
 
