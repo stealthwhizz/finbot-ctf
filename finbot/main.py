@@ -21,6 +21,7 @@ from finbot.core.auth.session import SessionContext, session_manager
 from finbot.core.data import (
     models as _models,  # noqa: F401 — register all tables with Base
 )
+from finbot.mcp.servers.finstripe import models as _finstripe_models  # noqa: F401
 from finbot.core.data.database import create_tables
 from finbot.core.error_handlers import register_error_handlers
 from finbot.core.websocket import websocket_router

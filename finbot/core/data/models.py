@@ -419,7 +419,115 @@ class ChatMessage(Base):
         }
 
 
-# Admin Portal
+# Admin Portal / MCP Models
+
+
+class MCPServerConfig(Base):
+    """Per-namespace MCP server configuration.
+    The tool_overrides_json field is the CTF attack surface for tool poisoning --
+    users can modify tool descriptions via the admin portal, and these overrides
+    are applied when the MCP server is instantiated for an agent run.
+    """
+
+    __tablename__ = "mcp_server_configs"
+
+    id = Column[int](Integer, primary_key=True, autoincrement=True)
+    namespace = Column[str](String(64), nullable=False, index=True)
+
+    server_type = Column[str](String(50), nullable=False)  # "finstripe", "gdrive", "taxcalc"
+    display_name = Column[str](String(255), nullable=False)
+    enabled = Column[bool](Boolean, default=True, nullable=False)
+
+    # Server-specific settings (payment limits, mock balance, etc.)
+    config_json = Column[str](Text, nullable=True)
+    # User-modified tool definitions -- the supply chain attack surface
+    tool_overrides_json = Column[str](Text, nullable=True)
+
+    created_at = Column[datetime](DateTime, default=datetime.now(UTC))
+    updated_at = Column[datetime](
+        DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC)
+    )
+
+    __table_args__ = (
+        UniqueConstraint("namespace", "server_type", name="uq_mcp_namespace_server"),
+        Index("idx_mcp_config_namespace", "namespace"),
+        Index("idx_mcp_config_type", "server_type"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<MCPServerConfig(namespace='{self.namespace}', "
+            f"server_type='{self.server_type}', enabled={self.enabled})>"
+        )
+
+    def get_config(self) -> dict:
+        return json.loads(self.config_json) if self.config_json else {}
+
+    def get_tool_overrides(self) -> dict:
+        return json.loads(self.tool_overrides_json) if self.tool_overrides_json else {}
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "namespace": self.namespace,
+            "server_type": self.server_type,
+            "display_name": self.display_name,
+            "enabled": self.enabled,
+            "config": self.get_config(),
+            "tool_overrides": self.get_tool_overrides(),
+            "created_at": self.created_at.isoformat().replace("+00:00", "Z"),
+            "updated_at": self.updated_at.isoformat().replace("+00:00", "Z"),
+        }
+
+
+class MCPActivityLog(Base):
+    """Records MCP protocol messages for the admin portal activity log.
+    Helps CTF players understand attack flows and debug injections.
+    """
+
+    __tablename__ = "mcp_activity_log"
+
+    id = Column[int](Integer, primary_key=True, autoincrement=True)
+    namespace = Column[str](String(64), nullable=False, index=True)
+
+    server_type = Column[str](String(50), nullable=False)
+    direction = Column[str](String(10), nullable=False)  # "request" or "response"
+    method = Column[str](String(100), nullable=False)  # "tools/list", "tools/call", etc.
+    tool_name = Column[str](String(100), nullable=True)
+    payload_json = Column[str](Text, nullable=True)
+
+    workflow_id = Column[str](String(64), nullable=True, index=True)
+    duration_ms = Column[float](Float, nullable=True)
+
+    created_at = Column[datetime](DateTime, default=datetime.now(UTC), index=True)
+
+    __table_args__ = (
+        Index("idx_mcp_activity_namespace", "namespace"),
+        Index("idx_mcp_activity_ns_server", "namespace", "server_type"),
+        Index("idx_mcp_activity_ns_ts", "namespace", "created_at"),
+        Index("idx_mcp_activity_workflow", "workflow_id"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<MCPActivityLog(id={self.id}, server='{self.server_type}', "
+            f"method='{self.method}', direction='{self.direction}')>"
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "namespace": self.namespace,
+            "server_type": self.server_type,
+            "direction": self.direction,
+            "method": self.method,
+            "tool_name": self.tool_name,
+            "payload": json.loads(self.payload_json) if self.payload_json else None,
+            "workflow_id": self.workflow_id,
+            "duration_ms": self.duration_ms,
+            "created_at": self.created_at.isoformat().replace("+00:00", "Z"),
+        }
+
 
 # CTF Models
 

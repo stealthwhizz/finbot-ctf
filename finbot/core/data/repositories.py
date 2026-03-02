@@ -13,6 +13,8 @@ from finbot.core.data.models import (
     ChatMessage,
     CTFEvent,
     Invoice,
+    MCPActivityLog,
+    MCPServerConfig,
     UserBadge,
     UserChallengeProgress,
     Vendor,
@@ -534,6 +536,170 @@ class VendorMessageRepository(NamespacedRepository):
             .limit(limit)
             .all()
         )
+
+
+# =============================================================================
+# MCP Server Config Repository
+# =============================================================================
+
+
+class MCPServerConfigRepository(NamespacedRepository):
+    """Repository for MCPServerConfig -- per-namespace MCP server settings."""
+
+    def get_by_type(self, server_type: str) -> MCPServerConfig | None:
+        return (
+            self._add_namespace_filter(
+                self.db.query(MCPServerConfig), MCPServerConfig
+            )
+            .filter(MCPServerConfig.server_type == server_type)
+            .first()
+        )
+
+    def list_all(self) -> list[MCPServerConfig]:
+        return (
+            self._add_namespace_filter(
+                self.db.query(MCPServerConfig), MCPServerConfig
+            )
+            .order_by(MCPServerConfig.server_type)
+            .all()
+        )
+
+    def upsert(
+        self,
+        server_type: str,
+        display_name: str,
+        enabled: bool = True,
+        config_json: str | None = None,
+        tool_overrides_json: str | None = None,
+    ) -> MCPServerConfig:
+        existing = self.get_by_type(server_type)
+        if existing:
+            existing.display_name = display_name
+            existing.enabled = enabled
+            if config_json is not None:
+                existing.config_json = config_json
+            if tool_overrides_json is not None:
+                existing.tool_overrides_json = tool_overrides_json
+            existing.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(existing)
+            return existing
+
+        config = MCPServerConfig(
+            namespace=self.namespace,
+            server_type=server_type,
+            display_name=display_name,
+            enabled=enabled,
+            config_json=config_json,
+            tool_overrides_json=tool_overrides_json,
+        )
+        self.db.add(config)
+        self.db.commit()
+        self.db.refresh(config)
+        return config
+
+    def update_config(
+        self, server_type: str, config_json: str
+    ) -> MCPServerConfig | None:
+        config = self.get_by_type(server_type)
+        if config:
+            config.config_json = config_json
+            config.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(config)
+        return config
+
+    def update_tool_overrides(
+        self, server_type: str, tool_overrides_json: str
+    ) -> MCPServerConfig | None:
+        config = self.get_by_type(server_type)
+        if config:
+            config.tool_overrides_json = tool_overrides_json
+            config.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(config)
+        return config
+
+    def toggle_enabled(self, server_type: str) -> MCPServerConfig | None:
+        config = self.get_by_type(server_type)
+        if config:
+            config.enabled = not config.enabled
+            config.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(config)
+        return config
+
+    def reset_tool_overrides(self, server_type: str) -> MCPServerConfig | None:
+        config = self.get_by_type(server_type)
+        if config:
+            config.tool_overrides_json = None
+            config.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(config)
+        return config
+
+
+# =============================================================================
+# MCP Activity Log Repository
+# =============================================================================
+
+
+class MCPActivityLogRepository(NamespacedRepository):
+    """Repository for MCPActivityLog -- MCP protocol message history."""
+
+    def log_activity(
+        self,
+        server_type: str,
+        direction: str,
+        method: str,
+        tool_name: str | None = None,
+        payload_json: str | None = None,
+        workflow_id: str | None = None,
+        duration_ms: float | None = None,
+    ) -> MCPActivityLog:
+        entry = MCPActivityLog(
+            namespace=self.namespace,
+            server_type=server_type,
+            direction=direction,
+            method=method,
+            tool_name=tool_name,
+            payload_json=payload_json,
+            workflow_id=workflow_id,
+            duration_ms=duration_ms,
+        )
+        self.db.add(entry)
+        self.db.commit()
+        self.db.refresh(entry)
+        return entry
+
+    def list_activity(
+        self,
+        server_type: str | None = None,
+        workflow_id: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[MCPActivityLog]:
+        query = self._add_namespace_filter(
+            self.db.query(MCPActivityLog), MCPActivityLog
+        )
+        if server_type:
+            query = query.filter(MCPActivityLog.server_type == server_type)
+        if workflow_id:
+            query = query.filter(MCPActivityLog.workflow_id == workflow_id)
+        return (
+            query.order_by(MCPActivityLog.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+    def get_activity_count(self, server_type: str | None = None) -> int:
+        query = self._add_namespace_filter(
+            self.db.query(MCPActivityLog), MCPActivityLog
+        )
+        if server_type:
+            query = query.filter(MCPActivityLog.server_type == server_type)
+        return query.count()
 
 
 # =============================================================================
