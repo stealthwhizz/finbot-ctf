@@ -252,7 +252,8 @@ class Vendor(Base):
         return f"<Vendor(id='{self.id}', company_name='{self.company_name}', namespace='{self.namespace}')>"
 
 
-# Valid invoice status values - single source of truth
+# Valid invoice status values - used for runtime validation in tools/data/invoice.py
+# Note: Column type hint also defines these values for static type checking
 VALID_INVOICE_STATUSES = ("submitted", "processing", "approved", "rejected", "paid")
 
 
@@ -271,7 +272,7 @@ class Invoice(Base):
     description = Column[str](Text, nullable=True)
     invoice_date = Column[datetime](DateTime, nullable=False)
     due_date = Column[datetime](DateTime, nullable=False)
-    # status is one of: submitted, processing, approved, rejected, paid
+    # Status - see VALID_INVOICE_STATUSES constant above for runtime validation
     status = Column[Literal["submitted", "processing", "approved", "rejected", "paid"]](
         String(50), default="submitted"
     )
