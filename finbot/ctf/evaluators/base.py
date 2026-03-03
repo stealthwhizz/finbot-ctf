@@ -45,13 +45,14 @@ class BaseEvaluator(ABC):
         """
 
     @abstractmethod
-    def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
+    async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
         """Check if the user has met the criteria for earning the badge.
 
         Called for each relevant event. The evaluator decides whether to:
         - Just analyze the current event
         - Query aggregate data from the database
-        - Both
+        - Use an LLM judge for semantic evaluation
+        - Any combination of the above
 
         Args:
             event: The event data dictionary to check

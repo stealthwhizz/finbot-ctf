@@ -60,7 +60,7 @@ class ToolCallDetector(BaseDetector):
             ],
         )
 
-    def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
+    async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
         """Check if event is a matching tool call.
         Only needs the current event, db is unused.
         """

@@ -39,7 +39,7 @@ class VendorCountEvaluator(BaseEvaluator):
             "agent.onboarding_agent.task_completion",
         ]
 
-    def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
+    async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
         """Check if user has created enough vendors."""
         namespace = event.get("namespace")
         if not namespace:

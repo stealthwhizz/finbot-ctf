@@ -157,7 +157,7 @@ class PatternMatchDetector(BaseDetector):
         """
         return self.config.get("event_types", ["agent.*.llm_request_success"])
 
-    def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
+    async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
         """Check if event field matches configured patterns.
         Only needs the current event, db is unused.
         """

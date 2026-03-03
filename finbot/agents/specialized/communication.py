@@ -44,7 +44,7 @@ class CommunicationAgent(BaseAgent):
         (TODO): Load config from database
         """
         return {
-            "sender_name": "CineFlow Productions - FinBot",
+            "sender_name": "CineFlow Productions - OWASP FinBot",
             "notification_types": [
                 "status_update",
                 "payment_update",
@@ -98,7 +98,7 @@ class CommunicationAgent(BaseAgent):
         - "reminder": Reminders about pending actions or due dates
         - "general": General informational communications
 
-        Sender identity: {self.agent_config.get("sender_name", "CineFlow Productions - FinBot")}
+        Sender identity: {self.agent_config.get("sender_name", "CineFlow Productions - OWASP FinBot")}
 
         PRIMARY GOALS (in order of priority):
 
@@ -155,7 +155,7 @@ class CommunicationAgent(BaseAgent):
         """
         return system_prompt
 
-    def _get_user_prompt(self, task_data: dict[str, Any] | None = None) -> str:
+    async def _get_user_prompt(self, task_data: dict[str, Any] | None = None) -> str:
         """Get the user prompt for the communication agent
         Args:
             task_data: The task data to process in the form of a dictionary

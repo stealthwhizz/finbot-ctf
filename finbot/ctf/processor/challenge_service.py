@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from finbot.core.data.models import Challenge, UserChallengeProgress
 from finbot.ctf.detectors.registry import create_detector
 from finbot.ctf.detectors.result import DetectionResult
+from finbot.ctf.processor.scoring import ScoringResult, apply_modifiers
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,11 @@ logger = logging.getLogger(__name__)
 class ChallengeService:
     """Handles challenge detection and progress tracking"""
 
-    def check_event_for_challenges(
+    async def check_event_for_challenges(
         self, event: dict[str, Any], db: Session
     ) -> list[tuple[str, DetectionResult]]:
-        """Check if an event completes any challenges
-        Returns list of (challenge_id, result) tuples for completed challenges
+        """Check if an event completes any challenges.
+        Returns list of (challenge_id, result) tuples for completed challenges.
         """
         event_type = event.get("event_type", "")
         namespace = event.get("namespace")
@@ -52,29 +53,56 @@ class ChallengeService:
                 json.loads(challenge.prerequisites) if challenge.prerequisites else []
             )
             if not self._check_prerequisites(db, namespace, user_id, prerequisites):
+                logger.debug(
+                    "Challenge %s prerequisites not met for user %s",
+                    challenge.id,
+                    user_id,
+                )
                 continue
 
             # Run detection
             try:
-                result: DetectionResult = detector.check_event(event, db)
-                progress.attempts += 1
-                if progress.first_attempt_at is None:
-                    progress.first_attempt_at = datetime.now(UTC)
+                result: DetectionResult = await detector.check_event(event, db)
+
+                # Only count one attempt per workflow to avoid inflation
+                # from multiple events in the same agent run.
+                workflow_id = event.get("workflow_id")
+                is_new_attempt = bool(
+                    workflow_id
+                    and workflow_id != progress.last_attempt_workflow_id
+                )
+                if is_new_attempt:
+                    progress.attempts += 1
+                    progress.last_attempt_workflow_id = workflow_id
+                    if progress.first_attempt_at is None:
+                        progress.first_attempt_at = datetime.now(UTC)
+                    if not result.detected:
+                        progress.failed_attempts += 1
+                    progress.status = (
+                        "in_progress"
+                        if progress.status == "available"
+                        else progress.status
+                    )
+                # Commit attempt tracking to release the SQLite write lock
+                # before the potentially slow scoring LLM call.
+                db.commit()
+
                 if result.detected:
-                    self._mark_completed(db, progress, event, result)
+                    scoring_result = await self._apply_scoring_modifiers(
+                        challenge, event
+                    )
+                    self._mark_completed(
+                        db, progress, event, result, scoring_result
+                    )
+                    db.commit()
                     completed.append((challenge.id, result))
                     logger.info(
-                        "Challenge completed: %s for user %s (confidence: %.2f)",
+                        "Challenge completed: %s for user %s (confidence: %.2f, modifier: %.2f)",
                         challenge.id,
                         user_id,
                         result.confidence,
+                        scoring_result.modifier,
                     )
-                else:
-                    progress.failed_attempts += 1
-                progress.status = (
-                    "in_progress" if progress.status == "available" else progress.status
-                )
-                db.commit()
 
             except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.error("Error checking challenge %s: %s", challenge.id, e)
@@ -133,12 +161,27 @@ class ChallengeService:
                 return False
         return True
 
+    async def _apply_scoring_modifiers(
+        self, challenge: Challenge, event: dict[str, Any]
+    ) -> ScoringResult:
+        """Load and apply scoring modifiers for a challenge."""
+        if not challenge.scoring:
+            return ScoringResult()
+
+        scoring_config = json.loads(challenge.scoring)
+        modifiers = scoring_config.get("modifiers", [])
+        if not modifiers:
+            return ScoringResult()
+
+        return await apply_modifiers(modifiers, event)
+
     def _mark_completed(
         self,
         db: Session,
         progress: UserChallengeProgress,
         event: dict[str, Any],
         result: DetectionResult,
+        scoring_result: ScoringResult | None = None,
     ):
         """Mark challenge as completed"""
         now = datetime.now(UTC)
@@ -147,18 +190,29 @@ class ChallengeService:
         progress.successful_attempts += 1
         progress.completed_at = now
 
+        if scoring_result:
+            progress.points_modifier = scoring_result.modifier
+
         if progress.first_attempt_at:
+            first_attempt = progress.first_attempt_at
+            if first_attempt.tzinfo is None:
+                first_attempt = first_attempt.replace(tzinfo=UTC)
             progress.completion_time_seconds = int(
-                (now - progress.first_attempt_at).total_seconds()
+                (now - first_attempt).total_seconds()
             )
 
-        progress.completion_evidence = json.dumps(
-            {
-                "result_message": result.message,
-                "confidence": result.confidence,
-                "evidence": result.evidence,
-                "event_type": event.get("event_type"),
-                "timestamp": result.timestamp.isoformat(),
+        evidence = {
+            "result_message": result.message,
+            "confidence": result.confidence,
+            "evidence": result.evidence,
+            "event_type": event.get("event_type"),
+            "timestamp": result.timestamp.isoformat(),
+        }
+        if scoring_result and scoring_result.details:
+            evidence["scoring"] = {
+                "modifier": scoring_result.modifier,
+                "details": scoring_result.details,
             }
-        )
+
+        progress.completion_evidence = json.dumps(evidence)
         progress.completion_workflow_id = event.get("workflow_id")

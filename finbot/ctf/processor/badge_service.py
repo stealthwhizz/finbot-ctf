@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class BadgeService:
     """Handles badge evaluation and awarding"""
 
-    def check_event_for_badges(
+    async def check_event_for_badges(
         self, event: dict[str, Any], db: Session
     ) -> list[tuple[str, DetectionResult]]:
         """
@@ -59,7 +59,7 @@ class BadgeService:
 
             # Run evaluation
             try:
-                result: DetectionResult = evaluator.check_event(event, db)
+                result: DetectionResult = await evaluator.check_event(event, db)
 
                 if result.detected:
                     self._award_badge(db, namespace, user_id, badge, event, result)

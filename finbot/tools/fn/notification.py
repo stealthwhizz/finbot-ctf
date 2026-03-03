@@ -5,7 +5,11 @@ from typing import Any
 
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
-from finbot.core.data.repositories import InvoiceRepository, VendorRepository
+from finbot.core.data.repositories import (
+    InvoiceRepository,
+    VendorMessageRepository,
+    VendorRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,19 +49,20 @@ async def send_vendor_notification(
     if not vendor:
         raise ValueError("Vendor not found")
 
-    # In production: use email provider to send
-    # For now: log the notification (console email provider)
-    logger.info(
-        "NOTIFICATION [%s] to %s (%s): Subject: %s | Message: %s",
-        notification_type,
-        vendor.company_name,
-        vendor.email,
-        subject,
-        message,
+    # Persist to vendor inbox
+    msg_repo = VendorMessageRepository(db, session_context)
+    stored = msg_repo.create_message(
+        vendor_id=vendor_id,
+        subject=subject,
+        body=message,
+        message_type=notification_type,
+        sender_name="CineFlow Productions - FinBot",
+        channel="email",
     )
 
     return {
         "notification_sent": True,
+        "message_id": stored.id,
         "vendor_id": vendor_id,
         "recipient_email": vendor.email,
         "recipient_name": vendor.company_name,
@@ -105,18 +110,21 @@ async def send_invoice_notification(
     if not vendor:
         raise ValueError("Vendor not found for this invoice")
 
-    logger.info(
-        "NOTIFICATION [%s] to %s (%s) re: Invoice #%s: Subject: %s | Message: %s",
-        notification_type,
-        vendor.company_name,
-        vendor.email,
-        invoice.invoice_number,
-        subject,
-        message,
+    # Persist to vendor inbox
+    msg_repo = VendorMessageRepository(db, session_context)
+    stored = msg_repo.create_message(
+        vendor_id=vendor.id,
+        subject=subject,
+        body=message,
+        message_type=notification_type,
+        sender_name="CineFlow Productions - FinBot",
+        channel="email",
+        related_invoice_id=invoice_id,
     )
 
     return {
         "notification_sent": True,
+        "message_id": stored.id,
         "invoice_id": invoice_id,
         "invoice_number": invoice.invoice_number,
         "vendor_id": vendor.id,

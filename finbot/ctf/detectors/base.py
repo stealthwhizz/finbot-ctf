@@ -42,13 +42,14 @@ class BaseDetector(ABC):
         """
 
     @abstractmethod
-    def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
+    async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
         """Check if the challenge condition is met for a given event.
 
         Called for each event as it arrives. The detector decides whether to:
         - Just analyze the current event
         - Query historical data from CTFEvent table via db session
-        - Both
+        - Use an LLM judge for semantic evaluation
+        - Any combination of the above
 
         Args:
             event: The event data dictionary to check
