@@ -2,6 +2,8 @@
 
 from fastapi import FastAPI
 
+from finbot.core.error_handlers import register_error_handlers
+
 from finbot.apps.ctf.routes import (
     activity,
     admin,
@@ -19,6 +21,8 @@ ctf_app = FastAPI(
     description="Capture The Flag Portal API",
     version="1.0.0",
 )
+
+register_error_handlers(ctf_app)
 
 # Include web routes (page routes)
 ctf_app.include_router(web_router)
