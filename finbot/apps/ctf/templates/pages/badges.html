@@ -78,6 +78,54 @@
         </a>
     </div>
 </div>
+
+<!-- Share Badge Modal -->
+<div id="share-badge-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card p-6 max-w-md w-full">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-text-bright">Share Badge</h3>
+            <button id="close-share-modal" class="text-text-secondary hover:text-text-bright">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Badge Preview -->
+        <div class="text-center mb-6 p-4 bg-portal-bg-primary rounded-xl">
+            <div id="share-badge-icon" class="text-4xl mb-2">🏅</div>
+            <div id="share-badge-title" class="font-semibold text-text-bright">Badge Title</div>
+            <div id="share-badge-rarity" class="text-sm text-ctf-primary capitalize">Rare</div>
+        </div>
+        
+        <div class="space-y-4">
+            <!-- Copy Link -->
+            <div class="flex gap-2">
+                <input id="share-badge-url" type="text" readonly class="flex-1 bg-portal-bg-primary border border-ctf-primary/30 rounded-lg px-4 py-2 text-text-primary text-sm font-mono">
+                <button id="copy-badge-link" class="px-4 py-2 bg-ctf-primary text-portal-bg-primary font-semibold rounded-lg hover:opacity-90 transition-opacity">
+                    Copy
+                </button>
+            </div>
+            
+            <!-- Social Links -->
+            <div class="flex gap-3">
+                <a id="share-badge-twitter" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-3 bg-black text-white rounded-lg hover:opacity-90 transition-opacity border border-white/10 text-sm">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Twitter
+                </a>
+                <a id="share-badge-linkedin" href="#" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-3 bg-[#0A66C2] text-white rounded-lg hover:opacity-90 transition-opacity text-sm">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    LinkedIn
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copied Toast -->
+<div id="copied-toast" class="fixed bottom-6 right-6 px-4 py-2 bg-ctf-accent text-portal-bg-primary font-semibold rounded-lg shadow-lg hidden">
+    ✓ Link copied!
+</div>
 {% endblock %}
 
 {% block extra_css %}
@@ -229,6 +277,34 @@
         border-radius: 6px;
         font-size: 10px;
     }
+
+    /* Share button */
+    .share-badge-btn {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        color: #00d4ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .badge-card.earned:hover .share-badge-btn {
+        opacity: 1;
+    }
+
+    .share-badge-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: rgba(0, 212, 255, 0.4);
+    }
 </style>
 {% endblock %}
 
@@ -324,11 +400,19 @@ function renderBadgeCard(badge, isEarned) {
     const secretRibbon = isEarned && badge.is_secret
         ? '<span class="secret-ribbon">Secret</span>'
         : '';
+    const shareBtn = isEarned
+        ? `<button class="share-badge-btn" onclick="openShareModal('${badge.id}', '${escapeHtml(badge.title)}', '${badge.rarity}')" title="Share">
+               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+               </svg>
+           </button>`
+        : '';
 
     return `
         <div class="badge-card ${earnedClass} ${secretClass} ${rarityClass}">
             ${secretRibbon}
             ${earnedDate}
+            ${shareBtn}
             <div class="badge-icon">${badgeIconHtml(badge)}</div>
             <h3 class="font-semibold text-text-bright mb-1">${escapeHtml(badge.title)}</h3>
             <p class="text-xs text-text-secondary mb-3">${escapeHtml(badge.description || '')}</p>
@@ -359,5 +443,49 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Share Modal Functions
+const shareModal = document.getElementById('share-badge-modal');
+const closeShareModal = document.getElementById('close-share-modal');
+const shareBadgeUrl = document.getElementById('share-badge-url');
+const copyBadgeLink = document.getElementById('copy-badge-link');
+const shareBadgeTwitter = document.getElementById('share-badge-twitter');
+const shareBadgeLinkedin = document.getElementById('share-badge-linkedin');
+const copiedToast = document.getElementById('copied-toast');
+
+function openShareModal(badgeId, badgeTitle, badgeRarity) {
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/ctf/share/badge/${badgeId}/card.png`;
+    const pageUrl = window.location.href;
+    
+    // Update modal content
+    document.getElementById('share-badge-title').textContent = badgeTitle;
+    document.getElementById('share-badge-rarity').textContent = badgeRarity;
+    shareBadgeUrl.value = pageUrl;
+    
+    // Update social links
+    const shareText = `I earned the "${badgeTitle}" badge on FinBot CTF! #OWASPGenAISecurityProject #OWASPFinBotCTF`;
+    shareBadgeTwitter.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
+    shareBadgeLinkedin.href = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(badgeTitle + ' - FinBot CTF Badge')}&summary=${encodeURIComponent('I earned this badge on FinBot CTF!')}`;
+    
+    shareModal.classList.remove('hidden');
+}
+
+closeShareModal.addEventListener('click', () => {
+    shareModal.classList.add('hidden');
+});
+
+shareModal.addEventListener('click', (e) => {
+    if (e.target === shareModal) {
+        shareModal.classList.add('hidden');
+    }
+});
+
+copyBadgeLink.addEventListener('click', () => {
+    navigator.clipboard.writeText(shareBadgeUrl.value).then(() => {
+        copiedToast.classList.remove('hidden');
+        setTimeout(() => copiedToast.classList.add('hidden'), 2000);
+    });
+});
 </script>
 {% endblock %}
