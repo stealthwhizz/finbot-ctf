@@ -5,7 +5,9 @@
   "scripts": {
     "build:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --minify",
     "watch:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --watch --minify",
-    "dev:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --minify"
+    "dev:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --minify",
+    "lint:css": "stylelint \"finbot/static/css/**/*.css\" --ignore-path .gitignore",
+    "lint:css:fix": "stylelint \"finbot/static/css/**/*.css\" --ignore-path .gitignore --fix"
   },
   "keywords": [
     "owasp",
@@ -17,6 +19,8 @@
   "author": "OWASP ASI",
   "license": "Apache-2.0",
   "devDependencies": {
+    "stylelint": "^17.4.0",
+    "stylelint-config-standard": "^40.0.0",
     "tailwindcss": "^3.4.1"
   }
 }
