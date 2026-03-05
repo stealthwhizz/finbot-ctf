@@ -61,7 +61,7 @@ npm run build:css
 # Watch mode (rebuilds automatically on template changes)
 npm run watch:css
 
-# Development build (unminified, faster)
+# Development build (minified, faster)
 npm run dev:css
 ```
 
