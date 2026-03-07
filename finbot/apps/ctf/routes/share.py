@@ -20,7 +20,7 @@ from finbot.core.data.repositories import (
     UserProfileRepository,
 )
 
-from .profile import calculate_level
+from .profile import LEVEL_THRESHOLDS, calculate_level
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/share", tags=["share"])
@@ -94,6 +94,34 @@ def _badge_template_context(badge: object) -> dict:
     }
 
 
+def _xp_progress(total_points: int) -> dict:
+    """Compute XP progress toward the next level."""
+    current_threshold = 0
+    next_threshold = LEVEL_THRESHOLDS[0][0]
+    next_title = "Max Level"
+
+    for i, (threshold, _level, _title) in enumerate(LEVEL_THRESHOLDS):
+        if total_points >= threshold:
+            current_threshold = threshold
+            if i > 0:
+                next_threshold = LEVEL_THRESHOLDS[i - 1][0]
+                next_title = LEVEL_THRESHOLDS[i - 1][2]
+            else:
+                next_threshold = threshold
+                next_title = _title
+            break
+
+    span = max(next_threshold - current_threshold, 1)
+    progress = min(int(((total_points - current_threshold) / span) * 100), 100)
+
+    return {
+        "xp_current": total_points,
+        "xp_next_threshold": next_threshold,
+        "xp_next_title": next_title,
+        "xp_pct": progress,
+    }
+
+
 def _render_html(template_name: str, context: dict) -> str:
     """Render a share-card Jinja2 template to an HTML string."""
     template = _jinja_env.get_template(template_name)
@@ -154,14 +182,33 @@ async def get_profile_card(
     hints_cost = sum(p.hints_cost for p in completed_progress)
     total_points = challenge_points + badge_points - hints_cost
 
-    total_challenges = len(challenge_repo.list_challenges())
-    completion_pct = (
-        int((len(completed_progress) / total_challenges) * 100)
-        if total_challenges > 0
-        else 0
-    )
-
     level, level_title = calculate_level(total_points)
+    xp = _xp_progress(total_points)
+
+    # Featured badges (user-curated, up to 6)
+    featured_badges: list[dict] = []
+    featured_ids = profile.get_featured_badge_ids()
+    if featured_ids:
+        earned_set = set(earned_badge_ids)
+        for bid in featured_ids:
+            if bid in earned_set:
+                badge = badge_repo.get_badge(bid)
+                if badge:
+                    featured_badges.append(
+                        {"title": badge.title, "rarity": badge.rarity}
+                    )
+
+    # Latest badge
+    latest_badge_title = ""
+    if earned_badges:
+        most_recent = max(earned_badges, key=lambda b: b.earned_at)
+        badge_obj = badge_repo.get_badge(most_recent.badge_id)
+        if badge_obj:
+            latest_badge_title = badge_obj.title
+
+    member_since = ""
+    if profile.created_at:
+        member_since = profile.created_at.strftime("%b %Y")
 
     bio = profile.bio or "AI Security Enthusiast"
 
@@ -174,8 +221,11 @@ async def get_profile_card(
         "total_points": total_points,
         "badges_earned": len(earned_badges),
         "challenges_completed": len(completed_progress),
-        "total_challenges": total_challenges,
-        "completion_percentage": completion_pct,
+        **xp,
+        "featured_badges": featured_badges,
+        "latest_badge_title": latest_badge_title,
+        "member_since": member_since,
+        "rarity_colors": RARITY_COLORS_HEX,
         "logo_b64": _get_image_b64("finbot.png"),
         "owasp_logo_b64": _get_image_b64("GenAI_OWASP_Logo.png"),
     }

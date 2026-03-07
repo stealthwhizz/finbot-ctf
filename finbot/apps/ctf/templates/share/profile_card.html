@@ -60,17 +60,6 @@
     background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 65%);
   }
 
-  .bg-glow-3 {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 800px;
-    height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(6, 255, 165, 0.018) 0%, transparent 70%);
-  }
-
   .accent-line-top {
     position: absolute;
     top: 0;
@@ -92,7 +81,7 @@
     padding: 24px 44px;
   }
 
-  /* ── Header ── */
+  /* -- Header -- */
   .header {
     display: flex;
     align-items: center;
@@ -143,7 +132,6 @@
     margin-top: 4px;
   }
 
-
   .owasp-logo-container {
     border-radius: 8px;
     padding: 6px 12px;
@@ -154,7 +142,7 @@
     display: block;
   }
 
-  /* ── Identity row ── */
+  /* -- Identity row -- */
   .identity-row {
     display: flex;
     align-items: center;
@@ -164,22 +152,22 @@
 
   .avatar-outer {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
     flex-shrink: 0;
   }
 
   .avatar-glow {
     position: absolute;
-    inset: -14px;
+    inset: -12px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(0, 212, 255, 0.14) 0%, transparent 70%);
   }
 
   .avatar-ring {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     background: linear-gradient(135deg, #00d4ff, #7c3aed);
     padding: 3px;
@@ -196,7 +184,7 @@
   }
 
   .avatar-letter {
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 900;
     background: linear-gradient(135deg, #00d4ff, #a78bfa);
     -webkit-background-clip: text;
@@ -204,12 +192,9 @@
     line-height: 1;
   }
 
-  .avatar-emoji { font-size: 50px; line-height: 1; }
+  .avatar-emoji { font-size: 46px; line-height: 1; }
 
-  .identity-info {
-    flex: 1;
-    min-width: 0;
-  }
+  .identity-info { flex: 1; min-width: 0; }
 
   .identity-top {
     display: flex;
@@ -218,7 +203,7 @@
   }
 
   .username {
-    font-size: 34px;
+    font-size: 32px;
     font-weight: 800;
     letter-spacing: -0.5px;
     line-height: 1.1;
@@ -256,121 +241,16 @@
 
   .bio-text {
     margin-top: 8px;
-    font-size: 14px;
+    font-size: 13px;
     color: #64748b;
     line-height: 1.5;
   }
 
-  /* ── Stats section ── */
-  .stats-section {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    flex-shrink: 0;
-  }
-
-  /* Points hero + completion ring side by side */
-  .hero-row {
+  /* -- Stats row: 3 columns -- */
+  .stats-row {
     display: flex;
     gap: 14px;
-  }
-
-  .hero-stat {
-    flex: 1;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(124, 58, 237, 0.03) 100%);
-    border: 1px solid rgba(0, 212, 255, 0.10);
-    border-radius: 16px;
-    padding: 18px 28px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .hero-stat-left { display: flex; flex-direction: column; }
-
-  .hero-stat-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #4a5568;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-  }
-
-  .hero-stat-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 46px;
-    font-weight: 700;
-    color: #00d4ff;
-    line-height: 1.15;
-    letter-spacing: -1px;
-    text-shadow: 0 0 30px rgba(0, 212, 255, 0.15);
-  }
-
-  /* Completion card */
-  .completion-card {
-    width: 200px;
     flex-shrink: 0;
-    background: rgba(6, 255, 165, 0.03);
-    border: 1px solid rgba(6, 255, 165, 0.10);
-    border-radius: 16px;
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .completion-ring-container {
-    position: relative;
-    width: 64px;
-    height: 64px;
-    flex-shrink: 0;
-  }
-
-  .completion-ring-bg { position: absolute; inset: 0; }
-  .completion-ring-bg circle { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 5; }
-
-  .completion-ring-fg { position: absolute; inset: 0; transform: rotate(-90deg); }
-  .completion-ring-fg circle { fill: none; stroke: url(#ring-gradient); stroke-width: 5; stroke-linecap: round; }
-
-  .completion-pct {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    font-weight: 700;
-    color: #06ffa5;
-  }
-
-  .completion-label {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .completion-label-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 22px;
-    font-weight: 700;
-    color: #06ffa5;
-    line-height: 1.1;
-  }
-
-  .completion-label-text {
-    font-size: 10px;
-    font-weight: 700;
-    color: #4a5568;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-top: 2px;
-  }
-
-  /* Secondary stats: 3-column */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
   }
 
   .stat-card {
@@ -378,11 +258,10 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 14px;
     padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .stat-card::before {
@@ -395,9 +274,83 @@
     border-radius: 0 0 2px 2px;
   }
 
-  .stat-card.sc-purple::before { background: #7c3aed; }
-  .stat-card.sc-amber::before  { background: #ffb800; }
-  .stat-card.sc-cyan::before   { background: #00d4ff; }
+  .stat-card.sc-points { flex: 2; }
+  .stat-card.sc-points::before { background: #00d4ff; }
+  .stat-card.sc-badges { flex: 1; }
+  .stat-card.sc-badges::before { background: #a78bfa; }
+  .stat-card.sc-challenges { flex: 1; }
+  .stat-card.sc-challenges::before { background: #ffb800; }
+
+  .stat-card-header {
+    font-size: 10px;
+    font-weight: 700;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+  }
+
+  .stat-card-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .sc-points .stat-card-value { color: #00d4ff; text-shadow: 0 0 24px rgba(0, 212, 255, 0.15); }
+  .sc-badges .stat-card-value { color: #a78bfa; }
+  .sc-challenges .stat-card-value { color: #ffb800; }
+
+  /* XP progress bar */
+  .xp-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .xp-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #00d4ff, #06ffa5);
+  }
+
+  .xp-bar-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #4a5568;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .xp-next {
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #334155;
+    letter-spacing: 0.3px;
+  }
+
+  .xp-next strong {
+    color: #06ffa5;
+    font-weight: 700;
+  }
+
+  /* Stat card icon + value row for badges/challenges */
+  .stat-card-body {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+  }
 
   .stat-icon {
     width: 40px;
@@ -410,33 +363,51 @@
     flex-shrink: 0;
   }
 
-  .sc-purple .stat-icon { background: rgba(124, 58, 237, 0.12); }
-  .sc-amber  .stat-icon { background: rgba(255, 184, 0, 0.10); }
-  .sc-cyan   .stat-icon { background: rgba(0, 212, 255, 0.10); }
+  .sc-badges .stat-icon { background: rgba(124, 58, 237, 0.12); }
+  .sc-challenges .stat-icon { background: rgba(255, 184, 0, 0.10); }
 
-  .stat-data { display: flex; flex-direction: column; }
-
-  .stat-card-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.1;
+  /* -- Featured badges strip -- */
+  .badges-strip {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
-  .sc-purple .stat-card-value { color: #a78bfa; }
-  .sc-amber  .stat-card-value { color: #ffb800; }
-  .sc-cyan   .stat-card-value { color: #00d4ff; }
-
-  .stat-card-label {
+  .badges-strip-label {
     font-size: 10px;
     font-weight: 700;
-    color: #4a5568;
+    color: #334155;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-top: 2px;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+    margin-right: 4px;
   }
 
-  /* ── Footer ── */
+  .badge-pill {
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  /* Latest badge (shown when no featured badges) */
+  .latest-badge {
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.20);
+    color: #00d4ff;
+    white-space: nowrap;
+  }
+
+  /* -- Footer -- */
   .footer {
     display: flex;
     align-items: center;
@@ -444,6 +415,17 @@
     border-top: 1px solid rgba(255, 255, 255, 0.04);
     padding-top: 12px;
     flex-shrink: 0;
+  }
+
+  .footer-left {
+    font-size: 11px;
+    color: #334155;
+    font-weight: 500;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 20px;
   }
 
   .footer-url {
@@ -469,17 +451,7 @@
   <div class="bg-grid"></div>
   <div class="bg-glow-1"></div>
   <div class="bg-glow-2"></div>
-  <div class="bg-glow-3"></div>
   <div class="accent-line-top"></div>
-
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#00d4ff"/>
-        <stop offset="100%" stop-color="#06ffa5"/>
-      </linearGradient>
-    </defs>
-  </svg>
 
   <div class="content">
 
@@ -529,65 +501,66 @@
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-section">
-      <div class="hero-row">
-        <div class="hero-stat">
-          <div class="hero-stat-left">
-            <span class="hero-stat-label">Total Points</span>
-            <span class="hero-stat-value">{{ "{:,}".format(total_points) }}</span>
+    <!-- Stats: 3 columns -->
+    <div class="stats-row">
+      <div class="stat-card sc-points">
+        <div class="stat-card-header">Total Points</div>
+        <div class="stat-card-value">{{ "{:,}".format(total_points) }}</div>
+        <div class="xp-bar-row">
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" style="width: {{ xp_pct }}%"></div>
           </div>
+          <span class="xp-bar-label">{{ "{:,}".format(xp_current) }}/{{ "{:,}".format(xp_next_threshold) }}</span>
         </div>
-        <div class="completion-card">
-          <div class="completion-ring-container">
-            {% set circumference = 2 * 3.14159 * 27 %}
-            {% set dash = (completion_percentage / 100) * circumference %}
-            <svg class="completion-ring-bg" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="27"/>
-            </svg>
-            <svg class="completion-ring-fg" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="27"
-                stroke-dasharray="{{ dash }} {{ circumference }}"
-              />
-            </svg>
-            <span class="completion-pct">{{ completion_percentage }}%</span>
-          </div>
-          <div class="completion-label">
-            <span class="completion-label-value">{{ challenges_completed }}/{{ total_challenges }}</span>
-            <span class="completion-label-text">Complete</span>
-          </div>
+        <div class="xp-next">Next: <strong>{{ xp_next_title }}</strong></div>
+      </div>
+      <div class="stat-card sc-badges">
+        <div class="stat-card-header">Badges</div>
+        <div class="stat-card-body">
+          <div class="stat-icon">🏅</div>
+          <div class="stat-card-value">{{ badges_earned }}</div>
         </div>
       </div>
-
-      <div class="stats-grid">
-        <div class="stat-card sc-purple">
-          <div class="stat-icon">🏅</div>
-          <div class="stat-data">
-            <div class="stat-card-value">{{ badges_earned }}</div>
-            <div class="stat-card-label">Badges Earned</div>
-          </div>
-        </div>
-        <div class="stat-card sc-amber">
+      <div class="stat-card sc-challenges">
+        <div class="stat-card-header">Challenges</div>
+        <div class="stat-card-body">
           <div class="stat-icon">⚡</div>
-          <div class="stat-data">
-            <div class="stat-card-value">{{ challenges_completed }}</div>
-            <div class="stat-card-label">Challenges</div>
-          </div>
-        </div>
-        <div class="stat-card sc-cyan">
-          <div class="stat-icon">🎯</div>
-          <div class="stat-data">
-            <div class="stat-card-value">Lvl {{ level }}</div>
-            <div class="stat-card-label">{{ level_title }}</div>
-          </div>
+          <div class="stat-card-value">{{ challenges_completed }}</div>
         </div>
       </div>
     </div>
 
+    <!-- Featured badges / latest badge strip -->
+    {% if featured_badges %}
+    <div class="badges-strip">
+      <span class="badges-strip-label">Featured Badges</span>
+      {% for badge in featured_badges %}
+        <span class="badge-pill" style="
+          background: {{ rarity_colors.get(badge.rarity, '#64748b') }}12;
+          border-color: {{ rarity_colors.get(badge.rarity, '#64748b') }}40;
+          color: {{ rarity_colors.get(badge.rarity, '#64748b') }};
+        ">{{ badge.title }}</span>
+      {% endfor %}
+    </div>
+    {% elif latest_badge_title %}
+    <div class="badges-strip">
+      <span class="badges-strip-label">Latest Badge</span>
+      <span class="latest-badge">{{ latest_badge_title }}</span>
+    </div>
+    {% endif %}
+
     <!-- Footer -->
     <div class="footer">
-      <span class="footer-url">genai.owasp.org</span>
-      <span class="footer-tag">#OWASPGenAISecurityProject &nbsp;&nbsp;&nbsp; #OWASPFinBotCTF</span>
+      {% if member_since %}
+        <span class="footer-left">Member since {{ member_since }}</span>
+      {% else %}
+        <span class="footer-left"></span>
+      {% endif %}
+      <div class="footer-right">
+        <span class="footer-url">genai.owasp.org</span>
+        <span class="footer-tag">#OWASPGenAISecurityProject</span>
+        <span class="footer-tag">#OWASPFinBotCTF</span>
+      </div>
     </div>
 
   </div>

@@ -62,7 +62,7 @@ class UserProfile(Base):
 
     # Public identity
     username = Column[str](String(32), unique=True, nullable=True, index=True)
-    bio = Column[str](String(160), nullable=True)
+    bio = Column[str](String(300), nullable=True)
     avatar_emoji = Column[str](String(10), default="🦊")
 
     # Privacy settings (public by default per user preference)

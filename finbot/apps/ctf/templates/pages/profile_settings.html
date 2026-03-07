@@ -81,13 +81,13 @@
         <textarea 
             id="bio-input" 
             placeholder="AI security enthusiast exploring the boundaries of LLM safety..."
-            maxlength="160"
+            maxlength="300"
             rows="3"
             class="w-full bg-portal-bg-primary border border-ctf-primary/30 rounded-lg px-4 py-3 text-text-bright placeholder-text-secondary focus:outline-none focus:border-ctf-primary transition-colors resize-none"
         ></textarea>
         <div class="flex justify-between mt-2">
             <span class="text-text-secondary text-xs">Short description for your profile</span>
-            <span id="bio-count" class="text-text-secondary text-xs">0/160</span>
+            <span id="bio-count" class="text-text-secondary text-xs">0/300</span>
         </div>
     </div>
 
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         usernameInput.value = profile.username || '';
         bioInput.value = profile.bio || '';
-        bioCount.textContent = `${(profile.bio || '').length}/160`;
+        bioCount.textContent = `${(profile.bio || '').length}/300`;
         selectedEmoji = profile.avatar_emoji || '🦊';
         isPublicCheckbox.checked = profile.is_public;
         showActivityCheckbox.checked = profile.show_activity;
@@ -563,7 +563,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     bioInput.addEventListener('input', () => {
-        bioCount.textContent = `${bioInput.value.length}/160`;
+        bioCount.textContent = `${bioInput.value.length}/300`;
         updatePreview();
     });
     

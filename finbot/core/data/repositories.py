@@ -180,7 +180,7 @@ class UserProfileRepository:
             return None
 
         if bio is not None:
-            profile.bio = bio[:160] if bio else None
+            profile.bio = bio[:300] if bio else None
         if avatar_emoji is not None:
             profile.avatar_emoji = avatar_emoji[:10] if avatar_emoji else "🦊"
         if is_public is not None:

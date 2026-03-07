@@ -73,7 +73,7 @@ class ProfileUpdateRequest(BaseModel):
     """Profile update request"""
 
     username: str | None = Field(None, min_length=3, max_length=20)
-    bio: str | None = Field(None, max_length=160)
+    bio: str | None = Field(None, max_length=300)
     avatar_emoji: str | None = Field(None, max_length=10)
     is_public: bool | None = None
     show_activity: bool | None = None
