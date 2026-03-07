@@ -113,11 +113,25 @@
     align-items: flex-start;
   }
 
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   .brand-name {
     font-size: 18px;
     font-weight: 800;
     letter-spacing: 0.5px;
     line-height: 1.1;
+  }
+
+  .brand-ctf {
+    font-size: 11px;
+    font-weight: 700;
+    color: #00d4ff;
+    letter-spacing: 1.5px;
+    font-family: 'JetBrains Mono', monospace;
   }
 
   .brand-sub {
@@ -237,13 +251,6 @@
     letter-spacing: 0.6px;
     text-transform: uppercase;
     white-space: nowrap;
-  }
-
-  .bio-text {
-    margin-top: 8px;
-    font-size: 13px;
-    color: #64748b;
-    line-height: 1.5;
   }
 
   /* -- Stats row: 3 columns -- */
@@ -464,7 +471,10 @@
           {% endif %}
         </div>
         <div class="brand-text">
-          <span class="brand-name">FINBOT</span>
+          <div class="brand-row">
+            <span class="brand-name">FINBOT</span>
+            <span class="brand-ctf">CTF</span>
+          </div>
           <span class="brand-sub">OWASP ASI</span>
         </div>
       </div>
@@ -497,7 +507,6 @@
             <span class="level-label">Lvl {{ level }} · {{ level_title }}</span>
           </div>
         </div>
-        <div class="bio-text">{{ bio }}</div>
       </div>
     </div>
 

@@ -20,7 +20,7 @@ from finbot.core.data.repositories import (
     UserProfileRepository,
 )
 
-from .profile import LEVEL_THRESHOLDS, calculate_level
+from .profile import LEVEL_THRESHOLDS, calculate_level, xp_progress
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/share", tags=["share"])
@@ -94,32 +94,7 @@ def _badge_template_context(badge: object) -> dict:
     }
 
 
-def _xp_progress(total_points: int) -> dict:
-    """Compute XP progress toward the next level."""
-    current_threshold = 0
-    next_threshold = LEVEL_THRESHOLDS[0][0]
-    next_title = "Max Level"
-
-    for i, (threshold, _level, _title) in enumerate(LEVEL_THRESHOLDS):
-        if total_points >= threshold:
-            current_threshold = threshold
-            if i > 0:
-                next_threshold = LEVEL_THRESHOLDS[i - 1][0]
-                next_title = LEVEL_THRESHOLDS[i - 1][2]
-            else:
-                next_threshold = threshold
-                next_title = _title
-            break
-
-    span = max(next_threshold - current_threshold, 1)
-    progress = min(int(((total_points - current_threshold) / span) * 100), 100)
-
-    return {
-        "xp_current": total_points,
-        "xp_next_threshold": next_threshold,
-        "xp_next_title": next_title,
-        "xp_pct": progress,
-    }
+_xp_progress = xp_progress
 
 
 def _render_html(template_name: str, context: dict) -> str:

@@ -220,6 +220,49 @@
 
         .activity-icon.badge { background: linear-gradient(135deg, #7c3aed, #4c1d95); }
         .activity-icon.challenge { background: linear-gradient(135deg, #00d4ff, #0066cc); }
+
+        .xp-section {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            padding: 16px 20px;
+        }
+
+        .xp-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .xp-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #00d4ff, #06ffa5);
+            transition: width 1s ease;
+        }
+
+        .stat-card .stat-accent {
+            position: absolute;
+            top: 0;
+            left: 24px;
+            right: 24px;
+            height: 2px;
+            border-radius: 0 0 2px 2px;
+        }
+
+        .stat-card { position: relative; overflow: hidden; }
+
+        .stat-card .stat-icon-bg {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body class="text-text-primary">
@@ -287,9 +330,15 @@
                         <!-- Info -->
                         <div class="flex-1 text-center md:text-left">
                             <h1 id="profile-username" class="text-4xl font-bold text-text-bright mb-2 glow-text">@username</h1>
-                            <div id="profile-level" class="inline-flex items-center gap-2 px-4 py-1.5 bg-ctf-secondary/20 border border-ctf-secondary/40 rounded-full text-sm font-semibold text-ctf-secondary mb-4">
-                                <span>⭐</span>
-                                <span>Level 1 Hacker</span>
+                            <div class="flex flex-wrap items-center gap-3 mb-4 justify-center md:justify-start">
+                                <div id="profile-level" class="inline-flex items-center gap-2 px-4 py-1.5 bg-ctf-secondary/20 border border-ctf-secondary/40 rounded-full text-sm font-semibold text-ctf-secondary">
+                                    <span>⭐</span>
+                                    <span>Level 1 Hacker</span>
+                                </div>
+                                <div id="profile-rank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-ctf-primary/10 border border-ctf-primary/25 rounded-full text-xs font-mono font-semibold text-ctf-primary">
+                                    <span>⚡</span>
+                                    <span>0 pts</span>
+                                </div>
                             </div>
                             <p id="profile-bio" class="text-text-secondary text-lg max-w-xl">AI Security Enthusiast</p>
                             <p id="profile-member-since" class="text-text-secondary/60 text-sm mt-2">Member since January 2026</p>
@@ -312,22 +361,46 @@
                     </div>
                 </div>
 
+                <!-- XP Progress -->
+                <div class="xp-section">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">XP Progress</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span id="xp-label" class="text-xs font-mono font-semibold text-gray-500">0/0</span>
+                            <span id="xp-next" class="text-xs font-semibold text-gray-600">Next: <span class="text-ctf-accent font-bold">—</span></span>
+                        </div>
+                    </div>
+                    <div class="xp-track">
+                        <div id="xp-fill" class="xp-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="stat-card">
-                        <div id="stat-points" class="text-4xl font-bold text-ctf-primary mb-1">0</div>
+                        <div class="stat-accent bg-ctf-primary"></div>
+                        <div class="stat-icon-bg mx-auto md:mx-0" style="background: rgba(0, 212, 255, 0.1)">🏆</div>
+                        <div id="stat-points" class="text-4xl font-bold font-mono text-ctf-primary mb-1">0</div>
                         <div class="text-sm text-text-secondary font-medium">Total Points</div>
                     </div>
                     <div class="stat-card">
-                        <div id="stat-badges" class="text-4xl font-bold text-ctf-secondary mb-1">0</div>
+                        <div class="stat-accent bg-ctf-secondary"></div>
+                        <div class="stat-icon-bg mx-auto md:mx-0" style="background: rgba(124, 58, 237, 0.12)">🏅</div>
+                        <div id="stat-badges" class="text-4xl font-bold font-mono text-ctf-secondary mb-1">0</div>
                         <div class="text-sm text-text-secondary font-medium">Badges Earned</div>
                     </div>
                     <div class="stat-card">
-                        <div id="stat-completion" class="text-4xl font-bold text-ctf-accent mb-1">0%</div>
+                        <div class="stat-accent bg-ctf-accent"></div>
+                        <div class="stat-icon-bg mx-auto md:mx-0" style="background: rgba(6, 255, 165, 0.08)">📊</div>
+                        <div id="stat-completion" class="text-4xl font-bold font-mono text-ctf-accent mb-1">0%</div>
                         <div class="text-sm text-text-secondary font-medium">Completion</div>
                     </div>
                     <div class="stat-card">
-                        <div id="stat-challenges" class="text-4xl font-bold text-ctf-warning mb-1">0</div>
+                        <div class="stat-accent bg-ctf-warning"></div>
+                        <div class="stat-icon-bg mx-auto md:mx-0" style="background: rgba(255, 184, 0, 0.1)">⚡</div>
+                        <div id="stat-challenges" class="text-4xl font-bold font-mono text-ctf-warning mb-1">0</div>
                         <div class="text-sm text-text-secondary font-medium">Challenges</div>
                     </div>
                 </div>
@@ -427,6 +500,14 @@
                         LinkedIn
                     </a>
                 </div>
+
+                <!-- Download Card -->
+                <a id="download-card" href="#" download class="flex items-center justify-center gap-2 py-4 bg-portal-bg-primary border border-white/10 text-text-primary rounded-xl hover:border-ctf-primary/40 hover:text-ctf-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download Share Card
+                </a>
             </div>
         </div>
     </div>
@@ -480,9 +561,16 @@ function renderProfile(profile) {
             document.getElementById('profile-member-since').textContent = 
                 `Member since ${memberSince.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
             
-            // Use level from API
             document.getElementById('profile-level').innerHTML = `<span>⭐</span><span>Lvl ${profile.level} · ${profile.level_title}</span>`;
+            document.getElementById('profile-rank').innerHTML = `<span>⚡</span><span>${profile.total_points.toLocaleString()} pts</span>`;
             
+            // XP progress bar
+            document.getElementById('xp-fill').style.width = `${profile.xp_pct}%`;
+            document.getElementById('xp-label').textContent = 
+                `${profile.xp_current.toLocaleString()} / ${profile.xp_next_threshold.toLocaleString()}`;
+            document.getElementById('xp-next').innerHTML = 
+                `Next: <span class="text-ctf-accent font-bold">${escapeHtml(profile.xp_next_title)}</span>`;
+
             document.getElementById('stat-points').textContent = profile.total_points.toLocaleString();
             document.getElementById('stat-badges').textContent = profile.badges_earned;
             document.getElementById('stat-completion').textContent = `${profile.completion_percentage}%`;
@@ -608,6 +696,11 @@ const shareText = `Check out my hacker profile on FinBot CTF! ${profile.total_po
             
             shareTwitter.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(profileUrl)}`;
             shareLinkedin.href = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(profileUrl)}&title=${encodeURIComponent(linkedInTitle)}&summary=${encodeURIComponent(linkedInSummary)}`;
+
+            const downloadCard = document.getElementById('download-card');
+            const cardUrl = `/ctf/share/profile/${encodeURIComponent(profile.username)}/card.png`;
+            downloadCard.href = cardUrl;
+            downloadCard.download = `${profile.username}-finbot-ctf.png`;
 
             shareBtn.addEventListener('click', () => shareModal.classList.remove('hidden'));
             closeModal.addEventListener('click', () => shareModal.classList.add('hidden'));

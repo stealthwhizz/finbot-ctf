@@ -50,6 +50,34 @@ def calculate_level(points: int) -> tuple[int, str]:
     return 1, "Script Kiddie"
 
 
+def xp_progress(total_points: int) -> dict:
+    """Compute XP progress toward the next level."""
+    current_threshold = 0
+    next_threshold = LEVEL_THRESHOLDS[0][0]
+    next_title = "Max Level"
+
+    for i, (threshold, _level, _title) in enumerate(LEVEL_THRESHOLDS):
+        if total_points >= threshold:
+            current_threshold = threshold
+            if i > 0:
+                next_threshold = LEVEL_THRESHOLDS[i - 1][0]
+                next_title = LEVEL_THRESHOLDS[i - 1][2]
+            else:
+                next_threshold = threshold
+                next_title = _title
+            break
+
+    span = max(next_threshold - current_threshold, 1)
+    progress = min(int(((total_points - current_threshold) / span) * 100), 100)
+
+    return {
+        "xp_current": total_points,
+        "xp_next_threshold": next_threshold,
+        "xp_next_title": next_title,
+        "xp_pct": progress,
+    }
+
+
 # =============================================================================
 # Response Models
 # =============================================================================
@@ -131,6 +159,12 @@ class PublicProfileResponse(BaseModel):
     # Level
     level: int
     level_title: str
+
+    # XP progress
+    xp_current: int
+    xp_next_threshold: int
+    xp_next_title: str
+    xp_pct: int
 
     # Stats
     total_points: int
@@ -402,8 +436,9 @@ async def get_public_profile(
                     )
                 )
 
-    # Calculate level
+    # Calculate level and XP progress
     level, level_title = calculate_level(total_points)
+    xp = xp_progress(total_points)
 
     # Recent achievements (if show_activity is enabled)
     recent_achievements: list[RecentAchievement] = []
@@ -455,6 +490,7 @@ async def get_public_profile(
         member_since=user.created_at.isoformat().replace("+00:00", "Z"),
         level=level,
         level_title=level_title,
+        **xp,
         total_points=total_points,
         challenges_completed=len(completed_progress),
         challenges_total=total_challenges,
