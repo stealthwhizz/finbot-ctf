@@ -117,43 +117,141 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 16px;
+            padding: 20px 16px 16px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            border-radius: 0 0 2px 2px;
         }
 
         .badge-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(0, 212, 255, 0.3);
-            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.1);
+        }
+
+        .rarity-common { border-color: rgba(100, 116, 139, 0.15); }
+        .rarity-common::before { background: #64748b; }
+        .rarity-common:hover {
+            border-color: rgba(100, 116, 139, 0.4);
+            box-shadow: 0 10px 40px rgba(100, 116, 139, 0.1);
+        }
+
+        .rarity-rare { border-color: rgba(59, 130, 246, 0.15); }
+        .rarity-rare::before { background: #3b82f6; }
+        .rarity-rare:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.15);
+        }
+
+        .rarity-epic { border-color: rgba(168, 85, 247, 0.15); }
+        .rarity-epic::before { background: #a855f7; }
+        .rarity-epic:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.15);
+        }
+
+        .rarity-legendary { border-color: rgba(251, 191, 36, 0.15); }
+        .rarity-legendary::before { background: #fbbf24; }
+        .rarity-legendary:hover {
+            border-color: rgba(251, 191, 36, 0.4);
+            box-shadow: 0 10px 40px rgba(251, 191, 36, 0.15);
         }
 
         .badge-icon {
-            width: 72px;
-            height: 72px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 1.6rem;
+            font-weight: 800;
             margin-bottom: 12px;
             position: relative;
         }
 
-        .rarity-common .badge-icon { background: linear-gradient(135deg, #374151, #1f2937); }
+        .rarity-common .badge-icon {
+            background: linear-gradient(135deg, #374151, #1f2937);
+            color: #94a3b8;
+        }
         .rarity-rare .badge-icon {
             background: linear-gradient(135deg, #1e3a5f, #1e40af);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
         }
         .rarity-epic .badge-icon {
             background: linear-gradient(135deg, #4c1d95, #7c3aed);
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+            color: #c084fc;
         }
         .rarity-legendary .badge-icon {
             background: linear-gradient(135deg, #78350f, #d97706);
-            box-shadow: 0 0 35px rgba(245, 158, 11, 0.5);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+            color: #fde68a;
+        }
+
+        .badge-points-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-top: 6px;
+        }
+
+        .rarity-common .badge-points-pill { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+        .rarity-rare .badge-points-pill { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+        .rarity-epic .badge-points-pill { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+        .rarity-legendary .badge-points-pill { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+
+        .badge-rarity-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .rarity-common .badge-rarity-label { color: #64748b; }
+        .rarity-rare .badge-rarity-label { color: #3b82f6; }
+        .rarity-epic .badge-rarity-label { color: #a855f7; }
+        .rarity-legendary .badge-rarity-label { color: #fbbf24; }
+
+        .badge-card.secret-earned {
+            border-color: rgba(245, 158, 11, 0.25);
+            background: linear-gradient(135deg, rgba(26, 21, 32, 0.9), rgba(30, 16, 40, 0.9), rgba(26, 21, 32, 0.9));
+        }
+
+        .badge-card.secret-earned:hover {
+            border-color: rgba(245, 158, 11, 0.5);
+            box-shadow: 0 10px 40px rgba(245, 158, 11, 0.12);
+        }
+
+        .secret-ribbon {
+            position: absolute;
+            top: 10px;
+            right: -26px;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: #000;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 2px 30px;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+            z-index: 1;
         }
 
         .progress-bar {
@@ -591,13 +689,26 @@ function renderProfile(profile) {
                 return;
             }
 
-            container.innerHTML = badges.map(badge => `
-                <div class="badge-card rarity-${badge.rarity}">
-                    <div class="badge-icon">🏅</div>
-                    <div class="text-sm font-semibold text-text-bright text-center mb-1">${escapeHtml(badge.title)}</div>
-                    <div class="text-xs text-text-secondary capitalize">${badge.rarity}</div>
-                </div>
-            `).join('');
+            container.innerHTML = badges.map(badge => {
+                const icon = badge.title ? badge.title[0].toUpperCase() : '?';
+                const desc = badge.description
+                    ? `<div class="text-xs text-text-secondary text-center mt-1 line-clamp-2">${escapeHtml(badge.description)}</div>`
+                    : '';
+                const secretClass = badge.is_secret ? 'secret-earned' : '';
+                const secretRibbon = badge.is_secret
+                    ? '<span class="secret-ribbon">Secret</span>'
+                    : '';
+                return `
+                <a href="/ctf/share/badge/${encodeURIComponent(username)}/${encodeURIComponent(badge.id)}/card.png"
+                   target="_blank" class="badge-card rarity-${badge.rarity} ${secretClass}" title="View badge card">
+                    ${secretRibbon}
+                    <div class="badge-icon">${icon}</div>
+                    <div class="text-sm font-semibold text-text-bright text-center">${escapeHtml(badge.title)}</div>
+                    <div class="badge-rarity-label">${badge.rarity}</div>
+                    ${desc}
+                    <div class="badge-points-pill">+${badge.points} pts</div>
+                </a>`;
+            }).join('');
         }
 
         function renderCategoryProgress(categories) {

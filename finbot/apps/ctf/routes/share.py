@@ -20,7 +20,7 @@ from finbot.core.data.repositories import (
     UserProfileRepository,
 )
 
-from .profile import LEVEL_THRESHOLDS, calculate_level, xp_progress
+from .profile import calculate_level, xp_progress
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/share", tags=["share"])
@@ -78,8 +78,8 @@ def _badge_template_context(badge: object) -> dict:
     ray_angles = [int(360 * i / num_rays) for i in range(num_rays)] if show_rays else []
 
     desc = badge.description or ""
-    if len(desc) > 60:
-        desc = desc[:57] + "..."
+    if len(desc) > 80:
+        desc = desc[:77] + "..."
 
     return {
         "badge_icon": badge.title[0].upper() if badge.title else "?",
@@ -88,9 +88,11 @@ def _badge_template_context(badge: object) -> dict:
         "badge_points": badge.points,
         "rarity_label": badge.rarity.upper(),
         "rarity_color": rarity_color,
+        "is_secret": getattr(badge, "is_secret", False),
         "show_rays": show_rays,
         "ray_angles": ray_angles,
         "logo_b64": _get_image_b64("finbot.png"),
+        "owasp_logo_b64": _get_image_b64("GenAI_OWASP_Logo.png"),
     }
 
 
@@ -170,7 +172,7 @@ async def get_profile_card(
                 badge = badge_repo.get_badge(bid)
                 if badge:
                     featured_badges.append(
-                        {"title": badge.title, "rarity": badge.rarity}
+                        {"title": badge.title, "rarity": badge.rarity, "is_secret": badge.is_secret}
                     )
 
     # Latest badge

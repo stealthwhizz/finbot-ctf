@@ -548,7 +548,7 @@
           background: {{ rarity_colors.get(badge.rarity, '#64748b') }}12;
           border-color: {{ rarity_colors.get(badge.rarity, '#64748b') }}40;
           color: {{ rarity_colors.get(badge.rarity, '#64748b') }};
-        ">{{ badge.title }}</span>
+        ">{% if badge.is_secret %}🔓 {% endif %}{{ badge.title }}</span>
       {% endfor %}
     </div>
     {% elif latest_badge_title %}

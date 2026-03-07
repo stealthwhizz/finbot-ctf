@@ -126,7 +126,10 @@ class BadgeSummary(BaseModel):
 
     id: str
     title: str
+    description: str | None
     rarity: str
+    points: int
+    is_secret: bool
     icon_url: str | None
 
 
@@ -414,7 +417,10 @@ async def get_public_profile(
                         BadgeSummary(
                             id=badge.id,
                             title=badge.title,
+                            description=badge.description,
                             rarity=badge.rarity,
+                            points=badge.points,
+                            is_secret=badge.is_secret,
                             icon_url=badge.icon_url,
                         )
                     )
@@ -431,7 +437,10 @@ async def get_public_profile(
                     BadgeSummary(
                         id=badge.id,
                         title=badge.title,
+                        description=badge.description,
                         rarity=badge.rarity,
+                        points=badge.points,
+                        is_secret=badge.is_secret,
                         icon_url=badge.icon_url,
                     )
                 )
