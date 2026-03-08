@@ -64,6 +64,8 @@ class UserProfile(Base):
     username = Column[str](String(32), unique=True, nullable=True, index=True)
     bio = Column[str](String(300), nullable=True)
     avatar_emoji = Column[str](String(10), default="🦊")
+    avatar_type = Column[str](String(10), default="emoji")  # "emoji" | "gravatar" | "url"
+    avatar_url = Column[str](String(500), nullable=True)  # only for avatar_type == "url"
 
     # Privacy settings (public by default per user preference)
     is_public = Column[bool](Boolean, default=True)
@@ -106,6 +108,8 @@ class UserProfile(Base):
             "username": self.username,
             "bio": self.bio,
             "avatar_emoji": self.avatar_emoji,
+            "avatar_type": self.avatar_type or "emoji",
+            "avatar_url": self.avatar_url,
             "is_public": self.is_public,
             "show_activity": self.show_activity,
             "featured_badge_ids": self.get_featured_badge_ids(),

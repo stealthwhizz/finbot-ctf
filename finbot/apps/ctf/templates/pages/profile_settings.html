@@ -94,9 +94,51 @@
     <!-- Avatar Section -->
     <div class="glass-card p-6">
         <h2 class="text-lg font-semibold text-text-bright mb-4">Avatar</h2>
-        <p class="text-text-secondary text-sm mb-4">Choose an emoji avatar for your profile</p>
-        <div id="emoji-grid" class="grid grid-cols-10 gap-2">
-            <!-- Emoji buttons will be added by JS -->
+
+        <!-- Avatar type tabs -->
+        <div class="flex gap-2 mb-5">
+            <button type="button" class="avatar-tab selected" data-tab="emoji">Emoji</button>
+            <button type="button" class="avatar-tab" data-tab="gravatar">Gravatar</button>
+            <button type="button" class="avatar-tab" data-tab="url">Image URL</button>
+        </div>
+
+        <!-- Emoji panel -->
+        <div id="avatar-panel-emoji" class="avatar-panel">
+            <p class="text-text-secondary text-sm mb-4">Choose an emoji avatar for your profile</p>
+            <div id="emoji-grid" class="grid grid-cols-10 gap-2">
+                <!-- Emoji buttons will be added by JS -->
+            </div>
+        </div>
+
+        <!-- Gravatar panel -->
+        <div id="avatar-panel-gravatar" class="avatar-panel hidden">
+            <div class="flex items-center gap-6 p-4 bg-portal-bg-primary rounded-xl border border-ctf-primary/10">
+                <div id="gravatar-preview" class="w-20 h-20 rounded-full bg-portal-bg-tertiary flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <span class="text-text-secondary/50 text-2xl">👤</span>
+                </div>
+                <div>
+                    <p class="text-text-secondary text-sm mb-2">Uses your account email to fetch your avatar from <a href="https://gravatar.com" target="_blank" class="text-ctf-primary hover:underline">gravatar.com</a></p>
+                    <p class="text-text-secondary/60 text-xs">If you don't have a Gravatar account, a unique geometric pattern will be generated for you.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- URL panel -->
+        <div id="avatar-panel-url" class="avatar-panel hidden">
+            <p class="text-text-secondary text-sm mb-3">Paste any HTTPS image URL — works with DiceBear, RoboHash, GitHub avatars, or any hosted image.</p>
+            <div class="flex gap-3 mb-4">
+                <input
+                    type="url"
+                    id="avatar-url-input"
+                    placeholder="https://api.dicebear.com/9.x/bottts/svg?seed=yourname"
+                    class="flex-1 bg-portal-bg-primary border border-ctf-primary/30 rounded-lg px-4 py-3 text-text-bright placeholder-text-secondary/40 text-sm font-mono focus:outline-none focus:border-ctf-primary transition-colors"
+                >
+            </div>
+            <div id="url-preview-container" class="hidden flex items-center gap-4 p-4 bg-portal-bg-primary rounded-xl border border-ctf-primary/10">
+                <img id="url-preview-img" src="" alt="Preview" class="w-20 h-20 rounded-full object-cover bg-portal-bg-tertiary flex-shrink-0">
+                <span class="text-ctf-accent text-sm font-medium">Preview looks good!</span>
+            </div>
+            <div id="url-error" class="hidden text-ctf-danger text-sm mt-2">URL must start with https://</div>
         </div>
     </div>
 
@@ -173,6 +215,29 @@
         background: linear-gradient(135deg, var(--portal-bg-secondary, #151520), var(--portal-bg-tertiary, #1a1a2e));
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 16px;
+    }
+
+    .avatar-tab {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary, #94a3b8);
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .avatar-tab:hover {
+        color: var(--text-primary, #e2e8f0);
+        background: rgba(0, 212, 255, 0.05);
+    }
+
+    .avatar-tab.selected {
+        color: var(--ctf-primary, #00d4ff);
+        background: rgba(0, 212, 255, 0.1);
+        border-color: rgba(0, 212, 255, 0.3);
     }
 
     .emoji-btn {
@@ -270,6 +335,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let badges = [];
     let selectedBadges = new Set();
     let selectedEmoji = '🦊';
+    let selectedAvatarType = 'emoji';
+    let selectedAvatarUrl = '';
     let usernameValid = false;
     
     // Emoji options
@@ -311,6 +378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadProfile();
     await loadBadges();
     renderEmojiGrid();
+    setupAvatarTabs();
     showContent();
     
     // Load profile data
@@ -341,9 +409,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         bioInput.value = profile.bio || '';
         bioCount.textContent = `${(profile.bio || '').length}/300`;
         selectedEmoji = profile.avatar_emoji || '🦊';
+        selectedAvatarType = profile.avatar_type || 'emoji';
+        selectedAvatarUrl = profile.avatar_url || '';
         isPublicCheckbox.checked = profile.is_public;
         showActivityCheckbox.checked = profile.show_activity;
         selectedBadges = new Set(profile.featured_badge_ids || []);
+        
+        switchAvatarTab(selectedAvatarType);
+        if (selectedAvatarType === 'url' && selectedAvatarUrl) {
+            document.getElementById('avatar-url-input').value = selectedAvatarUrl;
+            showUrlPreview(selectedAvatarUrl);
+        }
+        showGravatarPreview(profile.gravatar_preview_url || null);
         
         updatePreview();
         updatePublicProfileLink();
@@ -405,7 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Update preview
     function updatePreview() {
-        previewAvatar.textContent = selectedEmoji;
+        if (selectedAvatarType === 'emoji' || !getEffectiveAvatarUrl()) {
+            previewAvatar.innerHTML = '';
+            previewAvatar.textContent = selectedEmoji;
+        } else {
+            const url = getEffectiveAvatarUrl();
+            previewAvatar.innerHTML = `<img src="${escapeHtml(url)}" alt="" class="w-20 h-20 rounded-full object-cover" onerror="this.parentElement.textContent='${selectedEmoji}'">`;
+        }
         
         const username = usernameInput.value.trim();
         if (username) {
@@ -418,6 +501,92 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         previewBio.textContent = bioInput.value || 'Your bio will appear here';
+    }
+    
+    function getEffectiveAvatarUrl() {
+        if (selectedAvatarType === 'gravatar' && profile && profile.gravatar_preview_url) {
+            return profile.gravatar_preview_url;
+        }
+        if (selectedAvatarType === 'url' && selectedAvatarUrl) {
+            return selectedAvatarUrl;
+        }
+        return null;
+    }
+    
+    // Avatar tab management
+    function setupAvatarTabs() {
+        document.querySelectorAll('.avatar-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchAvatarTab(tab.dataset.tab);
+            });
+        });
+        
+        const urlInput = document.getElementById('avatar-url-input');
+        let urlDebounce;
+        urlInput.addEventListener('input', () => {
+            clearTimeout(urlDebounce);
+            urlDebounce = setTimeout(() => {
+                const url = urlInput.value.trim();
+                const errorEl = document.getElementById('url-error');
+                if (!url) {
+                    document.getElementById('url-preview-container').classList.add('hidden');
+                    errorEl.classList.add('hidden');
+                    selectedAvatarUrl = '';
+                    updatePreview();
+                    return;
+                }
+                if (!url.startsWith('https://')) {
+                    errorEl.classList.remove('hidden');
+                    document.getElementById('url-preview-container').classList.add('hidden');
+                    selectedAvatarUrl = '';
+                    updatePreview();
+                    return;
+                }
+                errorEl.classList.add('hidden');
+                selectedAvatarUrl = url;
+                showUrlPreview(url);
+                updatePreview();
+            }, 400);
+        });
+    }
+    
+    function switchAvatarTab(tab) {
+        selectedAvatarType = tab;
+        document.querySelectorAll('.avatar-tab').forEach(t => {
+            t.classList.toggle('selected', t.dataset.tab === tab);
+        });
+        document.querySelectorAll('.avatar-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(`avatar-panel-${tab}`).classList.remove('hidden');
+        
+        if (tab === 'gravatar') {
+            showGravatarPreview(profile ? profile.gravatar_preview_url : null);
+        }
+        updatePreview();
+    }
+    
+    function showGravatarPreview(url) {
+        const container = document.getElementById('gravatar-preview');
+        if (!url) {
+            container.innerHTML = '<span class="text-text-secondary text-xs text-center px-2">No email on account</span>';
+            return;
+        }
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Gravatar';
+        img.className = 'w-20 h-20 rounded-full object-cover';
+        img.onerror = () => {
+            container.innerHTML = '<span class="text-text-secondary text-xs text-center px-2">Could not load</span>';
+        };
+        container.innerHTML = '';
+        container.appendChild(img);
+    }
+    
+    function showUrlPreview(url) {
+        const container = document.getElementById('url-preview-container');
+        const img = document.getElementById('url-preview-img');
+        img.src = url;
+        img.onerror = () => container.classList.add('hidden');
+        img.onload = () => container.classList.remove('hidden');
     }
     
     // Update public profile link
@@ -478,6 +647,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const profileData = {
                 bio: bioInput.value || null,
                 avatar_emoji: selectedEmoji,
+                avatar_type: selectedAvatarType,
+                avatar_url: selectedAvatarType === 'url' ? selectedAvatarUrl || null : null,
                 is_public: isPublicCheckbox.checked,
                 show_activity: showActivityCheckbox.checked,
             };

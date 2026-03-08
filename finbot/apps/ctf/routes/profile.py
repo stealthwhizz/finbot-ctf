@@ -1,5 +1,6 @@
 """Profile API Routes - Social features for authenticated users"""
 
+import hashlib
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -78,6 +79,28 @@ def xp_progress(total_points: int) -> dict:
     }
 
 
+VALID_AVATAR_TYPES = ("emoji", "gravatar", "url")
+
+
+def gravatar_url(email: str, size: int = 256) -> str:
+    """Build a Gravatar URL from an email address."""
+    h = hashlib.md5(email.lower().strip().encode()).hexdigest()
+    return f"https://www.gravatar.com/avatar/{h}?s={size}&d=retro"
+
+
+def resolve_avatar_url(profile, user=None) -> str | None:
+    """Resolve the effective avatar URL for a profile.
+
+    Returns a URL string for gravatar/url types, or None for emoji.
+    """
+    avatar_type = profile.avatar_type or "emoji"
+    if avatar_type == "gravatar" and user and user.email:
+        return gravatar_url(user.email)
+    if avatar_type == "url" and profile.avatar_url:
+        return profile.avatar_url
+    return None
+
+
 # =============================================================================
 # Response Models
 # =============================================================================
@@ -90,6 +113,9 @@ class ProfileResponse(BaseModel):
     username: str | None
     bio: str | None
     avatar_emoji: str
+    avatar_type: str
+    avatar_url: str | None
+    gravatar_preview_url: str | None
     is_public: bool
     show_activity: bool
     featured_badge_ids: list[str]
@@ -103,6 +129,8 @@ class ProfileUpdateRequest(BaseModel):
     username: str | None = Field(None, min_length=3, max_length=20)
     bio: str | None = Field(None, max_length=300)
     avatar_emoji: str | None = Field(None, max_length=10)
+    avatar_type: str | None = Field(None, pattern="^(emoji|gravatar|url)$")
+    avatar_url: str | None = Field(None, max_length=500)
     is_public: bool | None = None
     show_activity: bool | None = None
 
@@ -157,6 +185,8 @@ class PublicProfileResponse(BaseModel):
     display_name: str | None
     bio: str | None
     avatar_emoji: str
+    avatar_type: str
+    avatar_url: str | None
     member_since: str
 
     # Level
@@ -187,6 +217,25 @@ class PublicProfileResponse(BaseModel):
     recent_achievements: list[RecentAchievement]
 
 
+def _build_profile_response(profile, user) -> ProfileResponse:
+    """Build a ProfileResponse from a profile and user."""
+    grav_preview = gravatar_url(user.email) if user and user.email else None
+    return ProfileResponse(
+        user_id=profile.user_id,
+        username=profile.username,
+        bio=profile.bio,
+        avatar_emoji=profile.avatar_emoji or "🦊",
+        avatar_type=profile.avatar_type or "emoji",
+        avatar_url=resolve_avatar_url(profile, user),
+        gravatar_preview_url=grav_preview,
+        is_public=profile.is_public,
+        show_activity=profile.show_activity,
+        featured_badge_ids=profile.get_featured_badge_ids(),
+        created_at=profile.created_at.isoformat().replace("+00:00", "Z"),
+        has_username=profile.username is not None,
+    )
+
+
 # =============================================================================
 # Authenticated Endpoints (require permanent session)
 # =============================================================================
@@ -201,17 +250,10 @@ async def get_own_profile(
     profile_repo = UserProfileRepository(db, session_context)
     profile = profile_repo.get_or_create_for_current_user()
 
-    return ProfileResponse(
-        user_id=profile.user_id,
-        username=profile.username,
-        bio=profile.bio,
-        avatar_emoji=profile.avatar_emoji or "🦊",
-        is_public=profile.is_public,
-        show_activity=profile.show_activity,
-        featured_badge_ids=profile.get_featured_badge_ids(),
-        created_at=profile.created_at.isoformat().replace("+00:00", "Z"),
-        has_username=profile.username is not None,
-    )
+    from finbot.core.data.models import User
+    user = db.query(User).filter(User.user_id == profile.user_id).first()
+
+    return _build_profile_response(profile, user)
 
 
 @router.put("", response_model=ProfileResponse)
@@ -240,11 +282,18 @@ async def update_profile(
         if error:
             raise HTTPException(status_code=400, detail=error)
 
+    # Validate avatar_url if switching to url type
+    if request.avatar_type == "url" and request.avatar_url:
+        if not request.avatar_url.startswith("https://"):
+            raise HTTPException(status_code=400, detail="Avatar URL must use HTTPS")
+
     # Update other fields
     profile = profile_repo.update_profile(
         user_id=session_context.user_id,
         bio=request.bio,
         avatar_emoji=request.avatar_emoji,
+        avatar_type=request.avatar_type,
+        avatar_url=request.avatar_url,
         is_public=request.is_public,
         show_activity=request.show_activity,
     )
@@ -252,17 +301,10 @@ async def update_profile(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    return ProfileResponse(
-        user_id=profile.user_id,
-        username=profile.username,
-        bio=profile.bio,
-        avatar_emoji=profile.avatar_emoji or "🦊",
-        is_public=profile.is_public,
-        show_activity=profile.show_activity,
-        featured_badge_ids=profile.get_featured_badge_ids(),
-        created_at=profile.created_at.isoformat().replace("+00:00", "Z"),
-        has_username=profile.username is not None,
-    )
+    from finbot.core.data.models import User
+    user = db.query(User).filter(User.user_id == profile.user_id).first()
+
+    return _build_profile_response(profile, user)
 
 
 @router.put("/featured-badges", response_model=ProfileResponse)
@@ -285,17 +327,10 @@ async def set_featured_badges(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    return ProfileResponse(
-        user_id=profile.user_id,
-        username=profile.username,
-        bio=profile.bio,
-        avatar_emoji=profile.avatar_emoji or "🦊",
-        is_public=profile.is_public,
-        show_activity=profile.show_activity,
-        featured_badge_ids=profile.get_featured_badge_ids(),
-        created_at=profile.created_at.isoformat().replace("+00:00", "Z"),
-        has_username=profile.username is not None,
-    )
+    from finbot.core.data.models import User
+    user = db.query(User).filter(User.user_id == profile.user_id).first()
+
+    return _build_profile_response(profile, user)
 
 
 @router.get("/check-username/{username}", response_model=UsernameCheckResponse)
@@ -496,6 +531,8 @@ async def get_public_profile(
         display_name=user.display_name,
         bio=profile.bio,
         avatar_emoji=profile.avatar_emoji or "🦊",
+        avatar_type=profile.avatar_type or "emoji",
+        avatar_url=resolve_avatar_url(profile, user),
         member_since=user.created_at.isoformat().replace("+00:00", "Z"),
         level=level,
         level_title=level_title,

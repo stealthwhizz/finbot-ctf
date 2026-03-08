@@ -5,6 +5,7 @@ import hashlib
 import logging
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, Response
 from jinja2 import Environment, FileSystemLoader
@@ -20,7 +21,7 @@ from finbot.core.data.repositories import (
     UserProfileRepository,
 )
 
-from .profile import calculate_level, xp_progress
+from .profile import calculate_level, resolve_avatar_url, xp_progress
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/share", tags=["share"])
@@ -68,6 +69,28 @@ def _get_image_b64(filename: str) -> str:
 def get_cache_path(cache_key: str) -> Path:
     """Get cache file path for a given key."""
     return CACHE_DIR / f"{cache_key}.png"
+
+
+async def _fetch_avatar_b64(url: str) -> str:
+    """Fetch a remote avatar image and return it as a base64 data URI.
+
+    Returns empty string on any failure (timeout, bad content type, too large).
+    """
+    try:
+        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return ""
+            content_type = resp.headers.get("content-type", "")
+            if not content_type.startswith("image/"):
+                return ""
+            if len(resp.content) > 2 * 1024 * 1024:
+                return ""
+            mime = content_type.split(";")[0].strip()
+            return f"data:{mime};base64,{base64.b64encode(resp.content).decode()}"
+    except Exception:
+        logger.debug("Failed to fetch avatar from %s", url, exc_info=True)
+        return ""
 
 
 def _badge_template_context(badge: object) -> dict:
@@ -189,9 +212,16 @@ async def get_profile_card(
 
     bio = profile.bio or "AI Security Enthusiast"
 
+    # Resolve avatar image for the card
+    avatar_image_b64 = ""
+    avatar_url = resolve_avatar_url(profile, user)
+    if avatar_url:
+        avatar_image_b64 = await _fetch_avatar_b64(avatar_url)
+
     template_context = {
         "username": profile.username,
         "avatar_emoji": profile.avatar_emoji or "",
+        "avatar_image_b64": avatar_image_b64,
         "bio": bio,
         "level": level,
         "level_title": level_title,

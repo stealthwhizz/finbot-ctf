@@ -195,6 +195,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+  }
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
   }
 
   .avatar-letter {
@@ -491,7 +499,9 @@
         <div class="avatar-glow"></div>
         <div class="avatar-ring">
           <div class="avatar-inner">
-            {% if avatar_emoji and avatar_emoji != username[0]|upper %}
+            {% if avatar_image_b64 %}
+              <img class="avatar-img" src="{{ avatar_image_b64 }}" alt="">
+            {% elif avatar_emoji and avatar_emoji != username[0]|upper %}
               <span class="avatar-emoji">{{ avatar_emoji }}</span>
             {% else %}
               <span class="avatar-letter">{{ username[0]|upper }}</span>

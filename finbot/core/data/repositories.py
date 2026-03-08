@@ -171,6 +171,8 @@ class UserProfileRepository:
         user_id: str,
         bio: str | None = None,
         avatar_emoji: str | None = None,
+        avatar_type: str | None = None,
+        avatar_url: str | None = None,
         is_public: bool | None = None,
         show_activity: bool | None = None,
     ) -> UserProfile | None:
@@ -183,6 +185,12 @@ class UserProfileRepository:
             profile.bio = bio[:300] if bio else None
         if avatar_emoji is not None:
             profile.avatar_emoji = avatar_emoji[:10] if avatar_emoji else "🦊"
+        if avatar_type is not None and avatar_type in ("emoji", "gravatar", "url"):
+            profile.avatar_type = avatar_type
+            if avatar_type != "url":
+                profile.avatar_url = None
+        if avatar_url is not None and profile.avatar_type == "url":
+            profile.avatar_url = avatar_url[:500] if avatar_url else None
         if is_public is not None:
             profile.is_public = is_public
         if show_activity is not None:

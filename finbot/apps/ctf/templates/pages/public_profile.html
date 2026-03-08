@@ -651,7 +651,12 @@
         }
 
 function renderProfile(profile) {
-            document.getElementById('profile-avatar').textContent = profile.avatar_emoji || '🦊';
+            const avatarEl = document.getElementById('profile-avatar');
+            if (profile.avatar_url) {
+                avatarEl.innerHTML = `<img src="${escapeHtml(profile.avatar_url)}" alt="" class="w-32 h-32 rounded-full object-cover" onerror="this.replaceWith(document.createTextNode('${profile.avatar_emoji || '🦊'}'))">`;
+            } else {
+                avatarEl.textContent = profile.avatar_emoji || '🦊';
+            }
             document.getElementById('profile-username').textContent = `@${profile.username}`;
             document.getElementById('profile-bio').textContent = profile.bio || 'AI Security Enthusiast';
             
