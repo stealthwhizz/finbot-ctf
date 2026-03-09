@@ -30,6 +30,7 @@ class OrchestratorAgent(BaseAgent):
             agent_name="orchestrator_agent",
         )
         self._delegation_attempts: dict[str, int] = {}
+        self._current_task_data: dict[str, Any] | None = None
 
         logger.info(
             "Orchestrator initialized for user=%s, namespace=%s, workflow=%s",
@@ -55,6 +56,7 @@ class OrchestratorAgent(BaseAgent):
         Returns:
             Synthesized result from all delegated agents.
         """
+        self._current_task_data = task_data
         result = await self._run_agent_loop(task_data=task_data)
         return result
 
@@ -356,14 +358,17 @@ class OrchestratorAgent(BaseAgent):
         if cap_result := self._check_delegation_limit("invoice"):
             return cap_result
         logger.info("Orchestrator delegating to invoice: invoice_id=%s", invoice_id)
-        # pylint: disable=import-outside-toplevel
-        from finbot.agents.runner import run_invoice_agent
+        from finbot.agents.runner import run_invoice_agent  # pylint: disable=import-outside-toplevel
+
+        td: dict[str, Any] = {
+            "invoice_id": invoice_id,
+            "description": task_description,
+        }
+        if self._current_task_data and self._current_task_data.get("attachment_file_ids"):
+            td["attachment_file_ids"] = self._current_task_data["attachment_file_ids"]
 
         result = await run_invoice_agent(
-            task_data={
-                "invoice_id": invoice_id,
-                "description": task_description,
-            },
+            task_data=td,
             session_context=self.session_context,
             workflow_id=self.workflow_id,
         )
@@ -379,14 +384,17 @@ class OrchestratorAgent(BaseAgent):
         if cap_result := self._check_delegation_limit("fraud"):
             return cap_result
         logger.info("Orchestrator delegating to fraud: vendor_id=%s", vendor_id)
-        # pylint: disable=import-outside-toplevel
-        from finbot.agents.runner import run_fraud_agent
+        from finbot.agents.runner import run_fraud_agent  # pylint: disable=import-outside-toplevel
+
+        td: dict[str, Any] = {
+            "vendor_id": vendor_id,
+            "description": task_description,
+        }
+        if self._current_task_data and self._current_task_data.get("attachment_file_ids"):
+            td["attachment_file_ids"] = self._current_task_data["attachment_file_ids"]
 
         result = await run_fraud_agent(
-            task_data={
-                "vendor_id": vendor_id,
-                "description": task_description,
-            },
+            task_data=td,
             session_context=self.session_context,
             workflow_id=self.workflow_id,
         )

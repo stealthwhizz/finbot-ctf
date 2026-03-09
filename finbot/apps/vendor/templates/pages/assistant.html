@@ -39,7 +39,13 @@
     </div>
 
     <div class="chat-input-area">
+        <div id="chat-attach-chips" class="chat-attach-chips hidden"></div>
         <div class="chat-input-wrapper">
+            <button id="chat-attach-btn" class="chat-attach-btn" title="Attach FinDrive file">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+            </button>
             <textarea
                 id="chat-input"
                 placeholder="Ask FinBot anything..."
@@ -53,6 +59,26 @@
             </button>
         </div>
         <p class="text-xs text-text-secondary/50 mt-2 text-center">FinBot may produce inaccurate information. Verify important details.</p>
+    </div>
+
+    <!-- FinDrive Picker for Chat -->
+    <div id="chat-picker-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-portal-bg-secondary border border-vendor-primary/30 rounded-2xl shadow-2xl max-w-xl w-full max-h-[60vh] overflow-hidden">
+            <div class="p-4 border-b border-vendor-primary/20 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-text-bright">Attach from FinDrive</h3>
+                <button id="chat-picker-close" class="text-text-secondary hover:text-text-bright transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="chat-picker-grid" class="p-4 overflow-y-auto max-h-[calc(60vh-110px)] grid grid-cols-3 sm:grid-cols-4 gap-3">
+                <p class="col-span-full text-center text-text-secondary py-8">Loading files...</p>
+            </div>
+            <div class="p-3 border-t border-vendor-primary/20 flex justify-end">
+                <button id="chat-picker-done" class="vendor-btn quantum-accent text-sm px-4 py-2">Attach</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -276,6 +302,64 @@
 .chat-send-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
+}
+
+/* Attachment tags inside message bubbles */
+.msg-attachments {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.msg-attach-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    font-size: 11px; color: #cbd5e1;
+}
+
+/* Attach button */
+.chat-attach-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: none; border: none;
+    color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+}
+.chat-attach-btn:hover { color: var(--vendor-primary); background: rgba(0,212,255,0.08); }
+
+/* Attachment chips above input */
+.chat-attach-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    max-width: 800px; margin: 0 auto 8px;
+    padding: 0 20px;
+}
+.chat-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px 3px 6px; border-radius: 6px;
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    font-size: 11px; color: #e2e8f0;
+}
+.chat-chip-x {
+    background: none; border: none; color: #94a3b8; cursor: pointer;
+    padding: 0; line-height: 1; font-size: 13px;
+}
+.chat-chip-x:hover { color: #f87171; }
+
+/* Picker card (reused from invoice) */
+.cpicker-card {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 14px 8px 10px; border-radius: 8px;
+    border: 2px solid transparent; cursor: pointer;
+    transition: all 0.15s; user-select: none; text-align: center;
+}
+.cpicker-card:hover { background: rgba(0,212,255,0.04); border-color: rgba(0,212,255,0.1); }
+.cpicker-card.selected { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.4); }
+.cpicker-card-name {
+    font-size: 11px; color: #e2e8f0; margin-top: 6px;
+    word-break: break-word; line-height: 1.3;
+    max-height: 2.6em; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 
 /* Scrollbar */

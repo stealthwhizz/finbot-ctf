@@ -66,6 +66,14 @@ class VendorContextResponse(BaseModel):
     is_multi_vendor: bool
 
 
+class AttachmentRef(BaseModel):
+    """FinDrive file attachment reference"""
+
+    file_id: int
+    filename: str
+    file_type: str = "pdf"
+
+
 class InvoiceCreateRequest(BaseModel):
     """Invoice creation request"""
 
@@ -74,6 +82,7 @@ class InvoiceCreateRequest(BaseModel):
     description: str
     invoice_date: str  # ISO date string YYYY-MM-DD
     due_date: str  # ISO date string YYYY-MM-DD
+    attachments: list[AttachmentRef] = []
 
 
 @router.post("/vendors/register")
@@ -543,17 +552,32 @@ async def create_invoice(
         invoice_dict["invoice_date"] = datetime.fromisoformat(invoice_data.invoice_date)
         invoice_dict["due_date"] = datetime.fromisoformat(invoice_data.due_date)
 
+        attachments_list = invoice_dict.pop("attachments", [])
+        import json as _json
+
+        if attachments_list:
+            invoice_dict["attachments"] = _json.dumps(
+                [a if isinstance(a, dict) else a.model_dump() for a in attachments_list]
+            )
+
         invoice = invoice_repo.create_invoice_for_current_vendor(**invoice_dict)
 
         workflow_id = f"wf_{secrets.token_urlsafe(12)}"
 
+        task_data = {
+            "invoice_id": invoice.id,
+            "vendor_id": session_context.current_vendor_id,
+            "description": "A new invoice has been submitted. Process the invoice and notify the vendor of the decision.",
+        }
+        if attachments_list:
+            task_data["attachment_file_ids"] = [
+                a["file_id"] if isinstance(a, dict) else a.file_id
+                for a in attachments_list
+            ]
+
         background_tasks.add_task(
             run_orchestrator_agent,
-            task_data={
-                "invoice_id": invoice.id,
-                "vendor_id": session_context.current_vendor_id,
-                "description": "A new invoice has been submitted. Process the invoice and notify the vendor of the decision.",
-            },
+            task_data=task_data,
             session_context=session_context,
             workflow_id=workflow_id,
         )
@@ -607,26 +631,7 @@ async def get_invoice(
     if invoice.vendor_id != session_context.current_vendor_id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    return {
-        "invoice": {
-            "id": invoice.id,
-            "invoice_number": invoice.invoice_number,
-            "amount": float(invoice.amount),
-            "status": invoice.status,
-            "description": invoice.description,
-            "invoice_date": invoice.invoice_date.isoformat()
-            if invoice.invoice_date
-            else None,
-            "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
-            "agent_notes": invoice.agent_notes,
-            "created_at": invoice.created_at.isoformat()
-            if invoice.created_at
-            else None,
-            "updated_at": invoice.updated_at.isoformat()
-            if invoice.updated_at
-            else None,
-        }
-    }
+    return {"invoice": invoice.to_dict()}
 
 
 class InvoiceUpdateRequest(BaseModel):
@@ -637,6 +642,7 @@ class InvoiceUpdateRequest(BaseModel):
     description: str | None = None
     invoice_date: str | None = None
     due_date: str | None = None
+    attachments: list[AttachmentRef] | None = None
 
 
 @router.put("/invoices/{invoice_id}")
@@ -670,6 +676,10 @@ async def update_invoice(
         updates["invoice_date"] = datetime.fromisoformat(invoice_data.invoice_date)
     if invoice_data.due_date is not None:
         updates["due_date"] = datetime.fromisoformat(invoice_data.due_date)
+    if invoice_data.attachments is not None:
+        import json as _json
+
+        updates["attachments"] = _json.dumps([a.model_dump() for a in invoice_data.attachments])
 
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -1076,6 +1086,7 @@ class ChatRequest(BaseModel):
     """Chat message request"""
 
     message: str
+    attachments: list[AttachmentRef] = []
 
 
 @router.post("/chat")
@@ -1092,8 +1103,10 @@ async def chat(
         background_tasks=background_tasks,
     )
 
+    attachments = [a.model_dump() for a in request.attachments] if request.attachments else None
+
     return StreamingResponse(
-        assistant.stream_response(request.message),
+        assistant.stream_response(request.message, attachments=attachments),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

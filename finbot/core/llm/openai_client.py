@@ -53,10 +53,15 @@ class OpenAIClient:
             create_params = {
                 "model": model,
                 "input": input_list,
-                "temperature": temperature,
                 "max_output_tokens": max_tokens,
                 "timeout": settings.LLM_TIMEOUT,
             }
+
+            no_temperature = any(
+                model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5")
+            )
+            if not no_temperature:
+                create_params["temperature"] = temperature
 
             if request.output_json_schema:
                 create_params["text"] = {

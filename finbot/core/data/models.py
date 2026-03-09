@@ -64,8 +64,12 @@ class UserProfile(Base):
     username = Column[str](String(32), unique=True, nullable=True, index=True)
     bio = Column[str](String(300), nullable=True)
     avatar_emoji = Column[str](String(10), default="🦊")
-    avatar_type = Column[str](String(10), default="emoji")  # "emoji" | "gravatar" | "url"
-    avatar_url = Column[str](String(500), nullable=True)  # only for avatar_type == "url"
+    avatar_type = Column[str](
+        String(10), default="emoji"
+    )  # "emoji" | "gravatar" | "url"
+    avatar_url = Column[str](
+        String(500), nullable=True
+    )  # only for avatar_type == "url"
 
     # Social links
     social_github = Column(String(200), nullable=True)
@@ -74,7 +78,7 @@ class UserProfile(Base):
     social_twitter = Column(String(200), nullable=True)
     social_linkedin = Column(String(200), nullable=True)
     social_website = Column(String(200), nullable=True)
-    
+
     # Privacy settings (public by default per user preference)
     is_public = Column[bool](Boolean, default=True)
     show_activity = Column[bool](Boolean, default=False)  # Activity feed is opt-in
@@ -355,6 +359,8 @@ class Invoice(Base):
     # agent_notes are notes from the agent that processed the invoice
     # Notes are contributed by both AI agents and Human agents
     agent_notes = Column[str](Text, nullable=True)
+    # JSON list of FinDrive file attachments: [{"file_id": 5, "filename": "...", "file_type": "pdf"}]
+    attachments = Column[str](Text, nullable=True)
 
     created_at = Column[datetime](DateTime, default=datetime.now(UTC))
     updated_at = Column[datetime](
@@ -375,6 +381,13 @@ class Invoice(Base):
 
     def to_dict(self) -> dict:
         """Convert invoice to dictionary"""
+        attachments = []
+        if self.attachments:
+            try:
+                attachments = json.loads(self.attachments)
+            except (ValueError, TypeError):
+                pass
+
         return {
             "id": self.id,
             "namespace": self.namespace,
@@ -386,6 +399,7 @@ class Invoice(Base):
             "due_date": self.due_date.isoformat().replace("+00:00", "Z"),
             "status": self.status,
             "agent_notes": self.agent_notes,
+            "attachments": attachments,
             "created_at": self.created_at.isoformat().replace("+00:00", "Z"),
             "updated_at": self.updated_at.isoformat().replace("+00:00", "Z"),
         }
@@ -415,9 +429,7 @@ class VendorMessage(Base):
     is_read = Column[bool](Boolean, default=False)
     read_at = Column[datetime](DateTime, nullable=True)
 
-    related_invoice_id = Column[int](
-        Integer, ForeignKey("invoices.id"), nullable=True
-    )
+    related_invoice_id = Column[int](Integer, ForeignKey("invoices.id"), nullable=True)
     workflow_id = Column[str](String(64), nullable=True)
     metadata_json = Column[str](Text, nullable=True)
 
@@ -455,9 +467,7 @@ class VendorMessage(Base):
             else None,
             "related_invoice_id": self.related_invoice_id,
             "workflow_id": self.workflow_id,
-            "metadata": json.loads(self.metadata_json)
-            if self.metadata_json
-            else None,
+            "metadata": json.loads(self.metadata_json) if self.metadata_json else None,
             "created_at": self.created_at.isoformat().replace("+00:00", "Z"),
         }
 
@@ -481,7 +491,13 @@ class ChatMessage(Base):
     cleared_at = Column[datetime](DateTime, nullable=True)
 
     __table_args__ = (
-        Index("idx_chat_ns_user_vendor_ts", "namespace", "user_id", "vendor_id", "created_at"),
+        Index(
+            "idx_chat_ns_user_vendor_ts",
+            "namespace",
+            "user_id",
+            "vendor_id",
+            "created_at",
+        ),
     )
 
     def __repr__(self) -> str:
@@ -514,7 +530,9 @@ class MCPServerConfig(Base):
     id = Column[int](Integer, primary_key=True, autoincrement=True)
     namespace = Column[str](String(64), nullable=False, index=True)
 
-    server_type = Column[str](String(50), nullable=False)  # "finstripe", "gdrive", "taxcalc"
+    server_type = Column[str](
+        String(50), nullable=False
+    )  # "finstripe", "gdrive", "taxcalc"
     display_name = Column[str](String(255), nullable=False)
     enabled = Column[bool](Boolean, default=True, nullable=False)
 
@@ -572,7 +590,9 @@ class MCPActivityLog(Base):
 
     server_type = Column[str](String(50), nullable=False)
     direction = Column[str](String(10), nullable=False)  # "request" or "response"
-    method = Column[str](String(100), nullable=False)  # "tools/list", "tools/call", etc.
+    method = Column[str](
+        String(100), nullable=False
+    )  # "tools/list", "tools/call", etc.
     tool_name = Column[str](String(100), nullable=True)
     payload_json = Column[str](Text, nullable=True)
 
