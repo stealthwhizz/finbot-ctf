@@ -67,6 +67,14 @@ class UserProfile(Base):
     avatar_type = Column[str](String(10), default="emoji")  # "emoji" | "gravatar" | "url"
     avatar_url = Column[str](String(500), nullable=True)  # only for avatar_type == "url"
 
+    # Social links
+    social_github = Column(String(200), nullable=True)
+    social_hackerone = Column(String(200), nullable=True)
+    social_bugcrowd = Column(String(200), nullable=True)
+    social_twitter = Column(String(200), nullable=True)
+    social_linkedin = Column(String(200), nullable=True)
+    social_website = Column(String(200), nullable=True)
+    
     # Privacy settings (public by default per user preference)
     is_public = Column[bool](Boolean, default=True)
     show_activity = Column[bool](Boolean, default=False)  # Activity feed is opt-in

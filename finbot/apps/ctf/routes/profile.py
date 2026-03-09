@@ -4,7 +4,7 @@ import hashlib
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_authenticated_session_context
@@ -106,6 +106,17 @@ def resolve_avatar_url(profile, user=None) -> str | None:
 # =============================================================================
 
 
+class SocialLinksResponse(BaseModel):
+    """Social links in API responses"""
+
+    github: str | None = None
+    hackerone: str | None = None
+    bugcrowd: str | None = None
+    twitter: str | None = None
+    linkedin: str | None = None
+    website: str | None = None
+
+
 class ProfileResponse(BaseModel):
     """User's own profile response"""
 
@@ -121,6 +132,18 @@ class ProfileResponse(BaseModel):
     featured_badge_ids: list[str]
     created_at: str
     has_username: bool
+    social_links: SocialLinksResponse | None = None
+
+
+class SocialLinksUpdate(BaseModel):
+    """Nested social links object sent by the frontend"""
+
+    github: HttpUrl | None = None
+    hackerone: HttpUrl | None = None
+    bugcrowd: HttpUrl | None = None
+    twitter: HttpUrl | None = None
+    linkedin: HttpUrl | None = None
+    website: HttpUrl | None = None
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -133,6 +156,7 @@ class ProfileUpdateRequest(BaseModel):
     avatar_url: str | None = Field(None, max_length=500)
     is_public: bool | None = None
     show_activity: bool | None = None
+    social_links: SocialLinksUpdate | None = None
 
 
 class FeaturedBadgesRequest(BaseModel):
@@ -216,6 +240,38 @@ class PublicProfileResponse(BaseModel):
     show_activity: bool
     recent_achievements: list[RecentAchievement]
 
+    # Social links
+    social_links: SocialLinksResponse | None = None
+
+
+SOCIAL_PLATFORMS = ["github", "hackerone", "bugcrowd", "twitter", "linkedin", "website"]
+
+
+def _build_social_links(profile) -> SocialLinksResponse | None:
+    """Build social_links from individual profile columns."""
+    links = {}
+    for platform in SOCIAL_PLATFORMS:
+        value = getattr(profile, f"social_{platform}", None)
+        if value:
+            links[platform] = value
+    return SocialLinksResponse(**links) if links else None
+
+
+def _update_social_links(profile, request, db) -> None:
+    """Flatten social_links from request into individual profile columns."""
+    update_data = request.model_dump(exclude_unset=True)
+    if "social_links" not in update_data:
+        return
+
+    links = update_data["social_links"] or {}
+
+    for platform in SOCIAL_PLATFORMS:
+        value = links.get(platform)
+        setattr(profile, f"social_{platform}", str(value) if value else None)
+
+    db.commit()
+    db.refresh(profile)
+
 
 def _build_profile_response(profile, user) -> ProfileResponse:
     """Build a ProfileResponse from a profile and user."""
@@ -233,6 +289,7 @@ def _build_profile_response(profile, user) -> ProfileResponse:
         featured_badge_ids=profile.get_featured_badge_ids(),
         created_at=profile.created_at.isoformat().replace("+00:00", "Z"),
         has_username=profile.username is not None,
+        social_links=_build_social_links(profile),
     )
 
 
@@ -300,6 +357,8 @@ async def update_profile(
 
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
+
+    _update_social_links(profile, request, db)
 
     from finbot.core.data.models import User
     user = db.query(User).filter(User.user_id == profile.user_id).first()
@@ -546,4 +605,5 @@ async def get_public_profile(
         category_progress=category_progress,
         show_activity=profile.show_activity,
         recent_achievements=recent_achievements,
+        social_links=_build_social_links(profile),
     )
