@@ -184,9 +184,9 @@
 
                 {% if session_context and session_context.email %}
                 <!-- Signed In User -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-vendor-accent to-vendor-primary flex items-center justify-center text-sm font-bold text-portal-bg-primary">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <div class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-r from-vendor-accent to-vendor-primary flex items-center justify-center text-sm font-bold text-portal-bg-primary">
                             {{ session_context.email[0]|upper }}
                         </div>
                         <div class="min-w-0 flex-1">
@@ -194,7 +194,7 @@
                             <div class="text-xs text-vendor-accent">Signed In</div>
                         </div>
                     </div>
-                    <a href="/auth/logout" class="vendor-btn quantum-secondary text-xs px-3 py-2">
+                    <a href="/auth/logout" class="shrink-0 vendor-btn quantum-secondary text-xs px-3 py-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                         </svg>
