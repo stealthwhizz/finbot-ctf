@@ -41,14 +41,20 @@ async def admin_messages(
     )
 
 
-@router.get("/assistant", response_class=HTMLResponse, name="admin_assistant")
-async def admin_assistant(
-    request: Request, session_context: SessionContext = Depends(get_session_context)
+@router.get(
+    "/copilot/reports/{file_id}",
+    response_class=HTMLResponse,
+    name="admin_copilot_report",
+)
+async def admin_copilot_report(
+    request: Request,
+    file_id: int,
+    session_context: SessionContext = Depends(get_session_context),
 ):
     return template_response(
         request,
-        "pages/assistant.html",
-        {"request": request},
+        "pages/report-viewer.html",
+        {"request": request, "file_id": file_id},
     )
 
 

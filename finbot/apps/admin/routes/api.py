@@ -481,7 +481,7 @@ async def _get_default_tool_definitions(server_type: str) -> list[dict]:
 
 
 # =============================================================================
-# Chat Assistant endpoints
+# Finance Co-Pilot endpoints
 # =============================================================================
 
 
@@ -490,22 +490,22 @@ class ChatRequest(BaseModel):
     message: str
 
 
-@router.post("/chat")
-async def chat(
+@router.post("/copilot/chat")
+async def copilot_chat(
     request: ChatRequest,
     background_tasks: BackgroundTasks,
     session_context: SessionContext = Depends(get_session_context),
 ):
-    """Stream a chat response from the admin AI assistant."""
-    from finbot.agents.chat import AdminChatAssistant  # pylint: disable=import-outside-toplevel
+    """Stream a chat response from the Finance Co-Pilot."""
+    from finbot.agents.chat import CoPilotAssistant  # pylint: disable=import-outside-toplevel
 
-    assistant = AdminChatAssistant(
+    copilot = CoPilotAssistant(
         session_context=session_context,
         background_tasks=background_tasks,
     )
 
     return StreamingResponse(
-        assistant.stream_response(request.message),
+        copilot.stream_response(request.message),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -514,24 +514,60 @@ async def chat(
     )
 
 
-@router.get("/chat/history")
-async def get_chat_history(
+@router.get("/copilot/history")
+async def get_copilot_history(
     limit: int = 100,
     session_context: SessionContext = Depends(get_session_context),
 ):
-    """Get chat history for the admin assistant."""
+    """Get chat history for the Finance Co-Pilot."""
     db = next(get_db())
     repo = ChatMessageRepository(db, session_context)
     messages = repo.get_history(limit=limit)
     return {"messages": [m.to_dict() for m in messages]}
 
 
-@router.delete("/chat/history")
-async def clear_chat_history(
+@router.delete("/copilot/history")
+async def clear_copilot_history(
     session_context: SessionContext = Depends(get_session_context),
 ):
-    """Clear admin chat history."""
+    """Clear Finance Co-Pilot chat history."""
     db = next(get_db())
     repo = ChatMessageRepository(db, session_context)
     count = repo.clear_history()
     return {"success": True, "messages_deleted": count}
+
+
+# =============================================================================
+# Co-Pilot Report endpoints
+# =============================================================================
+
+
+@router.get("/copilot/reports")
+async def list_copilot_reports(
+    limit: int = 20,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """List recent co-pilot report artifacts from FinDrive."""
+    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
+
+    db = next(get_db())
+    repo = FinDriveFileRepository(db, session_context)
+    files = repo.list_files(folder_path="/reports", limit=limit)
+    reports = [f.to_dict() for f in files if f.file_type == "report"]
+    return {"reports": reports}
+
+
+@router.get("/copilot/reports/{file_id}")
+async def get_copilot_report(
+    file_id: int,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Get a specific report's content for the viewer."""
+    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
+
+    db = next(get_db())
+    repo = FinDriveFileRepository(db, session_context)
+    f = repo.get_file(file_id)
+    if not f or f.file_type != "report":
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"report": f.to_dict_with_content()}

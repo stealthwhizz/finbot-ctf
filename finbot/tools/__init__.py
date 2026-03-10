@@ -2,14 +2,19 @@
 
 from finbot.tools.data import (
     flag_invoice_for_review,
+    get_all_vendors_summary,
     get_invoice_details,
     get_invoice_for_payment,
+    get_pending_actions_summary,
+    get_vendor_activity_report,
+    get_vendor_compliance_docs,
     get_vendor_contact_info,
     get_vendor_details,
     get_vendor_invoices,
     get_vendor_payment_summary,
     get_vendor_risk_profile,
     process_payment,
+    save_report,
     update_fraud_agent_notes,
     update_invoice_agent_notes,
     update_invoice_status,
@@ -43,4 +48,10 @@ __all__ = [
     # Function tools
     "calculate_tax",
     "get_vendor_contact_info",
+    # Admin report / Co-Pilot tools
+    "get_all_vendors_summary",
+    "get_pending_actions_summary",
+    "get_vendor_compliance_docs",
+    "get_vendor_activity_report",
+    "save_report",
 ]

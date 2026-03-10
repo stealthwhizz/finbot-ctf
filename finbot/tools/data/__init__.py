@@ -1,5 +1,12 @@
 """Data tools to fetch/write model data from/to various data sources"""
 
+from finbot.tools.data.admin_reports import (
+    get_all_vendors_summary,
+    get_pending_actions_summary,
+    get_vendor_activity_report,
+    get_vendor_compliance_docs,
+    save_report,
+)
 from finbot.tools.data.fraud import (
     flag_invoice_for_review,
     get_vendor_invoices,
@@ -46,4 +53,10 @@ __all__ = [
     "update_vendor_risk",
     "flag_invoice_for_review",
     "update_fraud_agent_notes",
+    # Admin report / Co-Pilot tools
+    "get_all_vendors_summary",
+    "get_pending_actions_summary",
+    "get_vendor_compliance_docs",
+    "get_vendor_activity_report",
+    "save_report",
 ]
