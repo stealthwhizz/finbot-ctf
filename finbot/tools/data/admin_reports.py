@@ -291,6 +291,6 @@ async def save_report(
         "filename": f.filename,
         "report_type": report_type,
         "title": title,
-        "viewer_url": f"/admin/copilot/reports/{f.id}",
+        "viewer_url": f"/admin/findrive#file-{f.id}",
         "status": "saved",
     }

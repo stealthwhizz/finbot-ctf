@@ -391,6 +391,49 @@ async def send_message(
 
 
 # =============================================================================
+# FinDrive endpoints (admin-scoped)
+# =============================================================================
+
+
+@router.get("/findrive")
+async def list_admin_files(
+    folder: str | None = None,
+    file_type: str | None = None,
+    limit: int = 100,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """List admin-scoped files from FinDrive (vendor_id=NULL)."""
+    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
+
+    db = next(get_db())
+    repo = FinDriveFileRepository(db, session_context)
+    files = repo.list_files(folder_path=folder, limit=limit)
+    admin_files = [f for f in files if f.vendor_id is None]
+    if file_type:
+        admin_files = [f for f in admin_files if f.file_type == file_type]
+    return {
+        "files": [f.to_dict() for f in admin_files],
+        "total_count": len(admin_files),
+    }
+
+
+@router.get("/findrive/{file_id}")
+async def get_admin_file(
+    file_id: int,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Get a specific admin file's content from FinDrive."""
+    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
+
+    db = next(get_db())
+    repo = FinDriveFileRepository(db, session_context)
+    f = repo.get_file(file_id)
+    if not f:
+        raise HTTPException(status_code=404, detail="File not found")
+    return {"file": f.to_dict_with_content()}
+
+
+# =============================================================================
 # MCP Activity Log endpoints
 # =============================================================================
 
@@ -535,39 +578,3 @@ async def clear_copilot_history(
     repo = ChatMessageRepository(db, session_context)
     count = repo.clear_history()
     return {"success": True, "messages_deleted": count}
-
-
-# =============================================================================
-# Co-Pilot Report endpoints
-# =============================================================================
-
-
-@router.get("/copilot/reports")
-async def list_copilot_reports(
-    limit: int = 20,
-    session_context: SessionContext = Depends(get_session_context),
-):
-    """List recent co-pilot report artifacts from FinDrive."""
-    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
-
-    db = next(get_db())
-    repo = FinDriveFileRepository(db, session_context)
-    files = repo.list_files(folder_path="/reports", limit=limit)
-    reports = [f.to_dict() for f in files if f.file_type == "report"]
-    return {"reports": reports}
-
-
-@router.get("/copilot/reports/{file_id}")
-async def get_copilot_report(
-    file_id: int,
-    session_context: SessionContext = Depends(get_session_context),
-):
-    """Get a specific report's content for the viewer."""
-    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
-
-    db = next(get_db())
-    repo = FinDriveFileRepository(db, session_context)
-    f = repo.get_file(file_id)
-    if not f or f.file_type != "report":
-        raise HTTPException(status_code=404, detail="Report not found")
-    return {"report": f.to_dict_with_content()}

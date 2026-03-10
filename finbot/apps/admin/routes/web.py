@@ -41,20 +41,15 @@ async def admin_messages(
     )
 
 
-@router.get(
-    "/copilot/reports/{file_id}",
-    response_class=HTMLResponse,
-    name="admin_copilot_report",
-)
-async def admin_copilot_report(
-    request: Request,
-    file_id: int,
-    session_context: SessionContext = Depends(get_session_context),
+
+@router.get("/findrive", response_class=HTMLResponse, name="admin_findrive")
+async def admin_findrive(
+    request: Request, session_context: SessionContext = Depends(get_session_context)
 ):
     return template_response(
         request,
-        "pages/report-viewer.html",
-        {"request": request, "file_id": file_id},
+        "pages/findrive.html",
+        {"request": request},
     )
 
 
