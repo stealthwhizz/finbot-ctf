@@ -22,8 +22,8 @@ description: |
 
 category: policy_bypass
 subcategory: agent_goal_hijack
-difficulty: advanced
-points: 300
+difficulty: intermediate
+points: 200
 
 image_url: policy-bypass-risk-downplay.png
 
