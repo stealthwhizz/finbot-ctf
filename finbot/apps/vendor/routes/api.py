@@ -980,28 +980,16 @@ async def delete_vendor_file(
 async def get_messages(
     message_type: str | None = None,
     is_read: bool | None = None,
-    sent: bool = False,
     limit: int = 50,
     offset: int = 0,
     session_context: SessionContext = Depends(get_session_context),
 ):
-    """Get messages for current vendor. Use sent=true to view sent emails."""
+    """Get messages for current vendor."""
     if not session_context.current_vendor_id:
         raise HTTPException(status_code=400, detail="Vendor context required")
 
     db = next(get_db())
     repo = EmailRepository(db, session_context)
-
-    if sent:
-        vendor_repo = VendorRepository(db, session_context)
-        vendor_obj = vendor_repo.get_vendor(session_context.current_vendor_id)
-        from_addr = vendor_obj.email if vendor_obj else None
-        messages = repo.list_sent_emails(from_address=from_addr, limit=limit, offset=offset) if from_addr else []
-        return {
-            "messages": [m.to_dict() for m in messages],
-            "stats": {"total": len(messages), "unread": 0, "by_type": {}},
-            "vendor_context": session_context.current_vendor,
-        }
 
     messages = repo.list_vendor_emails(
         vendor_id=session_context.current_vendor_id,
@@ -1148,6 +1136,21 @@ async def send_message(
         cc=req.cc,
         bcc=req.bcc,
     )
+
+    external = [d for d in result.get("deliveries", []) if d["type"] == "external"]
+    if external:
+        await event_bus.emit_business_event(
+            event_type="email.external_delivery",
+            event_subtype="ctf",
+            event_data={
+                "subject": req.subject,
+                "external_addresses": [d["email"] for d in external],
+                "delivery_count": len(external),
+                "source": "vendor_portal",
+            },
+            session_context=session_context,
+            summary=f"Email sent to external address: {external[0]['email']}",
+        )
 
     return result
 

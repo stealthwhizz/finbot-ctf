@@ -122,6 +122,33 @@ const CTF = {
     },
 
     /**
+     * Get dead drop (intercepted external emails)
+     */
+    async getDeadDrop(options = {}) {
+        const params = new URLSearchParams();
+        if (options.limit) params.append('limit', options.limit);
+        if (options.offset) params.append('offset', options.offset);
+
+        const queryString = params.toString();
+        const endpoint = queryString ? `/toolkit/dead-drop?${queryString}` : '/toolkit/dead-drop';
+        return this.fetch(endpoint);
+    },
+
+    /**
+     * Get dead drop stats
+     */
+    async getDeadDropStats() {
+        return this.fetch('/toolkit/dead-drop/stats');
+    },
+
+    /**
+     * Read a specific dead drop message
+     */
+    async getDeadDropMessage(messageId) {
+        return this.fetch(`/toolkit/dead-drop/${messageId}`);
+    },
+
+    /**
      * Get activity stream
      */
     async getActivity(options = {}) {
