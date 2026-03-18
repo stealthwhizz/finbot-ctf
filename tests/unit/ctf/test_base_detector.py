@@ -5,7 +5,6 @@ config is not a dict, instead of deferring to an AttributeError later.
 """
 
 import pytest
-from unittest.mock import MagicMock
 
 from finbot.ctf.detectors.base import BaseDetector
 from finbot.ctf.detectors.result import DetectionResult

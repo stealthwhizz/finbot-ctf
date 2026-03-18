@@ -6,17 +6,13 @@ gt / gte / lt / lte.
 """
 
 import pytest
-from unittest.mock import MagicMock
 
 from finbot.ctf.detectors.primitives.tool_call import ToolCallDetector
 
 
 @pytest.fixture
 def detector():
-    d = ToolCallDetector.__new__(ToolCallDetector)
-    d.config = {"tool_name": "test_tool"}
-    d.challenge_id = "test"
-    return d
+    return ToolCallDetector(challenge_id="test", config={"tool_name": "test_tool"})
 
 
 class TestCheckConditionNumericOperators:
