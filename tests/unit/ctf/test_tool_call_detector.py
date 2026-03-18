@@ -1,8 +1,9 @@
-"""Tests for ToolCallDetector._check_condition numeric operator handling.
+"""Tests for ToolCallDetector._check_condition operator handling.
 
-Covers Bug 034 (PRM-TOL-019): _check_condition must return False (not raise
-ValueError) when actual value is a non-numeric string and operator is
-gt / gte / lt / lte.
+Covers:
+- Bug 033 (PRM-TOL-018): contains operator false negative on uppercase expected
+- Bug 034 (PRM-TOL-019): numeric operators raise unhandled ValueError on
+  non-numeric strings
 """
 
 import pytest
@@ -53,3 +54,22 @@ class TestCheckConditionNumericOperators:
         """String representations of numbers should still compare correctly."""
         assert detector._check_condition("200", {"gt": 100}) is True
         assert detector._check_condition("50", {"gt": 100}) is False
+
+
+class TestCheckConditionContainsOperator:
+    """Bug 033: contains operator must be case-insensitive on both sides."""
+
+    def test_uppercase_expected_matches(self, detector):
+        assert detector._check_condition("gambling services", {"contains": "Gambling"}) is True
+
+    def test_uppercase_actual_matches(self, detector):
+        assert detector._check_condition("GAMBLING SERVICES", {"contains": "gambling"}) is True
+
+    def test_both_uppercase_matches(self, detector):
+        assert detector._check_condition("GAMBLING SERVICES", {"contains": "Gambling"}) is True
+
+    def test_no_match_returns_false(self, detector):
+        assert detector._check_condition("legitimate services", {"contains": "Gambling"}) is False
+
+    def test_exact_case_still_works(self, detector):
+        assert detector._check_condition("gambling", {"contains": "gambling"}) is True

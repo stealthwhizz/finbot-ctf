@@ -187,7 +187,7 @@ class ToolCallDetector(BaseDetector):
             if op == "not_in":
                 return actual not in expected
             if op == "contains":
-                return expected in str(actual).lower()
+                return str(expected).lower() in str(actual).lower()
             if op in ("gt", "gte", "lt", "lte"):
                 try:
                     actual_f = float(actual)
