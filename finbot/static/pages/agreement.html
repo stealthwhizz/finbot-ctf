@@ -69,6 +69,12 @@
         .float { animation: float 6s ease-in-out infinite; }
         .pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
 
+        @keyframes cta-pulse {
+            0%, 100% { border-color: rgba(0,212,255,0.3); }
+            50% { border-color: rgba(0,212,255,0.5); box-shadow: 0 0 24px rgba(0,212,255,0.1); }
+        }
+        #ctaBlock { animation: cta-pulse 3s ease-in-out infinite; }
+
         .checkbox-box {
             width: 24px; height: 24px;
             border: 2px solid #00d4ff;
@@ -185,7 +191,8 @@
                         </ul>
                     </div>
 
-                    <div class="bg-bg-primary/40 border border-cyan/20 rounded-xl p-6 text-center">
+                    <div class="bg-gradient-to-b from-cyan/[0.06] to-purple/[0.04] border-2 border-cyan/30 rounded-xl p-6 text-center relative overflow-hidden" id="ctaBlock">
+                        <p class="text-text-1 font-semibold mb-4">To continue, accept the participation policy</p>
                         <div class="flex items-center justify-center gap-3 mb-5 cursor-pointer" id="agreementRow">
                             <div class="checkbox-box" id="agreementCheckbox"></div>
                             <label class="text-text-2 text-sm cursor-pointer select-none">
@@ -193,7 +200,7 @@
                             </label>
                         </div>
 
-                        <button class="w-full bg-gradient-to-r from-cyan to-purple text-bg-primary font-bold px-8 py-3.5 rounded-xl text-base transition-all hover:shadow-[0_0_32px_rgba(0,212,255,0.3)] hover:scale-[1.02] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100" id="enterButton" disabled>
+                        <button class="w-full bg-gradient-to-r from-cyan to-purple text-bg-primary font-bold px-8 py-4 rounded-xl text-base transition-all hover:shadow-[0_0_32px_rgba(0,212,255,0.3)] hover:scale-[1.02] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100" id="enterButton" disabled>
                             Enter Platform
                         </button>
                     </div>
