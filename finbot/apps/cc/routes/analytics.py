@@ -3,6 +3,26 @@
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
+from finbot.core.analytics.ctf_queries import (
+    get_badges_by_rarity,
+    get_challenges_by_category,
+    get_challenges_by_difficulty,
+    get_ctf_overview,
+    get_ctf_session_breakdown,
+    get_daily_completions,
+    get_daily_events,
+    get_events_count,
+    get_recent_badges,
+    get_top_agents,
+    get_top_badges_earned,
+    get_top_challenges,
+    get_top_event_types,
+    get_top_players,
+    get_top_tools,
+    get_unsolved_challenges,
+    get_profile_adoption,
+    get_share_link_stats,
+)
 from finbot.core.analytics.queries import (
     get_auth_funnel,
     get_browser_breakdown,
@@ -104,5 +124,58 @@ async def daily_latency_api(days: int = Query(default=30)):
     db = SessionLocal()
     try:
         return get_daily_latency(db, days=days or None)
+    finally:
+        db.close()
+
+
+@router.get("/ctf", response_class=HTMLResponse)
+async def ctf_analytics(request: Request):
+    """CTF analytics dashboard tab"""
+    db = SessionLocal()
+    try:
+        data = {
+            "overview": get_ctf_overview(db),
+            "events_7d": get_events_count(db, days=7),
+            "by_difficulty": get_challenges_by_difficulty(db),
+            "by_category": get_challenges_by_category(db),
+            "top_challenges": get_top_challenges(db, limit=10),
+            "unsolved": get_unsolved_challenges(db),
+            "top_players": get_top_players(db, limit=10),
+            "badges_by_rarity": get_badges_by_rarity(db),
+            "top_badges": get_top_badges_earned(db, limit=10),
+            "recent_badges": get_recent_badges(db, limit=10),
+            "daily_completions": get_daily_completions(db, days=30),
+            "daily_events": get_daily_events(db, days=30),
+            "top_event_types": get_top_event_types(db, days=7, limit=10),
+            "top_agents": get_top_agents(db, days=7, limit=8),
+            "top_tools": get_top_tools(db, days=7, limit=8),
+            "ctf_sessions": get_ctf_session_breakdown(db),
+            "profile_adoption": get_profile_adoption(db),
+            "share_stats": get_share_link_stats(db, days=7),
+        }
+    finally:
+        db.close()
+
+    return template_response(request, "pages/analytics_ctf.html", data)
+
+
+@router.get("/api/daily-events")
+async def daily_events_api(days: int = Query(default=30)):
+    """JSON endpoint for daily event volume."""
+    days = _sanitize_days(days)
+    db = SessionLocal()
+    try:
+        return get_daily_events(db, days=days or None)
+    finally:
+        db.close()
+
+
+@router.get("/api/daily-completions")
+async def daily_completions_api(days: int = Query(default=30)):
+    """JSON endpoint for daily challenge completions."""
+    days = _sanitize_days(days)
+    db = SessionLocal()
+    try:
+        return get_daily_completions(db, days=days or None)
     finally:
         db.close()
