@@ -28,7 +28,7 @@ def _matches_pattern(
     if not text or not pattern:
         return False, None
 
-       if is_regex:
+    if is_regex:
         flags = 0 if case_sensitive else re.IGNORECASE
         try:
             match = re.search(pattern, text, flags)
