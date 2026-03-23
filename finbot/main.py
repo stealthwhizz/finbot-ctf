@@ -112,6 +112,14 @@ if settings.CC_ANALYTICS_ENABLED:
 app.add_middleware(CSRFProtectionMiddleware)
 app.add_middleware(SessionMiddleware)
 
+# Trust X-Forwarded-Proto/For from reverse proxies (Railway, etc.)
+# so url_for() generates https:// URLs and client IPs are correct.
+from uvicorn.middleware.proxy_headers import (
+    ProxyHeadersMiddleware,  # pylint: disable=ungrouped-imports
+)
+
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+
 # Register error handlers
 register_error_handlers(app)
 
