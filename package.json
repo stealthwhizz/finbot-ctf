@@ -4,8 +4,7 @@
   "description": "OWASP FinBot CTF - Agentic AI Security Training",
   "scripts": {
     "build:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --minify",
-    "watch:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --watch --minify",
-    "dev:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --minify"
+    "watch:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --watch --minify"
   },
   "keywords": [
     "owasp",
