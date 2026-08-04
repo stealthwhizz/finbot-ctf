@@ -115,7 +115,7 @@
 
             <!-- Action Card -->
             <div class="glass-card p-6 text-center">
-                <a href="/vendor/dashboard" class="action-btn inline-block w-full mb-4">
+                <a href="/vendor/dashboard" id="action-link" class="action-btn inline-block w-full mb-4">
                     Go to Vendor Portal →
                 </a>
                 <p class="text-sm text-text-secondary">Interact with the AI agent to attempt this challenge</p>
@@ -409,6 +409,16 @@
 <script>
 const challengeId = "{{ challenge_id }}";
 let challengeData = null;
+
+// Red Light/Green Light is session-driven, not vendor-portal-driven -- point
+// its action button at the live challenge page instead of the vendor portal.
+if (challengeId === "adversarial-red-light-green-light") {
+    const actionLink = document.getElementById("action-link");
+    if (actionLink) {
+        actionLink.href = "/ctf/red-light-green-light";
+        actionLink.textContent = "Start Session →";
+    }
+}
 
 // Category configuration
 const CATEGORY_CONFIG = {

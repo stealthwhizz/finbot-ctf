@@ -100,6 +100,22 @@ async def ctf_badges(
 
 
 @router.get(
+    "/red-light-green-light",
+    response_class=HTMLResponse,
+    name="ctf_rlgl",
+)
+async def ctf_rlgl(
+    request: Request, session_context: SessionContext = Depends(get_session_context)
+):
+    """Red Light/Green Light live adversarial challenge page"""
+    return template_response(
+        request,
+        "pages/red_light_green_light.html",
+        {"session_context": session_context},
+    )
+
+
+@router.get(
     "/profile/settings", response_class=HTMLResponse, name="ctf_profile_settings"
 )
 async def ctf_profile_settings(

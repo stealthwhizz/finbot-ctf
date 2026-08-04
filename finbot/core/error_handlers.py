@@ -21,8 +21,15 @@ DEFAULT_BACK = ("/", "Back to Home")
 
 
 def is_api_request(request: Request) -> bool:
-    """Determine if the request is for an API endpoint."""
-    return request.url.path.startswith("/api/")
+    """Determine if the request is for an API endpoint.
+
+    request.url.path is the request's full incoming path (e.g.
+    "/ctf/api/v1/rlgl/toggle/x" for a route mounted under /ctf), not
+    relative to the mount point, so an exact "/api/" prefix check misses
+    every API route inside a mounted sub-app. Checking for "/api/" as a
+    substring works regardless of mount depth.
+    """
+    return "/api/" in request.url.path
 
 
 def get_portal_context(request: Request) -> dict:

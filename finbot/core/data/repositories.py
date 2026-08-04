@@ -19,6 +19,7 @@ from finbot.core.data.models import (
     LabsGuardrailConfig,
     MCPActivityLog,
     MCPServerConfig,
+    RedLightSession,
     User,
     UserBadge,
     UserChallengeProgress,
@@ -1448,3 +1449,78 @@ class LabsGuardrailConfigRepository(NamespacedRepository):
         self.db.delete(config)
         self.db.commit()
         return True
+
+
+# =============================================================================
+# Red Light/Green Light Session Repository
+# =============================================================================
+
+
+class RedLightSessionRepository(NamespacedRepository):
+    """Repository for RedLightSession -- one live/completed session per user."""
+
+    def get_active(self) -> RedLightSession | None:
+        return (
+            self._add_namespace_filter(self.db.query(RedLightSession), RedLightSession)
+            .filter(
+                RedLightSession.user_id == self.session_context.user_id,
+                RedLightSession.status == "active",
+            )
+            .order_by(RedLightSession.id.desc())
+            .first()
+        )
+
+    def get_latest(self) -> RedLightSession | None:
+        """Most recent session regardless of status.
+
+        Unlike get_active(), this still returns a session the instant it
+        finishes (won/lost) -- callers that need to show the result (status,
+        feed) must use this, or the terminal state is invisible from the API
+        the moment the session stops being "active".
+        """
+        return (
+            self._add_namespace_filter(self.db.query(RedLightSession), RedLightSession)
+            .filter(RedLightSession.user_id == self.session_context.user_id)
+            .order_by(RedLightSession.id.desc())
+            .first()
+        )
+
+    def create(self, ends_at: datetime, workflow_id: str) -> RedLightSession:
+        session = RedLightSession(
+            namespace=self.namespace,
+            user_id=self.session_context.user_id,
+            session_id=self.session_context.session_id,
+            workflow_id=workflow_id,
+            health=100,
+            status="active",
+            ends_at=ends_at,
+        )
+        self._ensure_namespace(session)
+        self.db.add(session)
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
+    def apply_damage(self, session: RedLightSession, damage: int) -> RedLightSession:
+        session.health = max(0, session.health - damage)
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
+    def heal(self, session: RedLightSession, amount: int, max_health: int = 100) -> RedLightSession:
+        session.health = min(max_health, session.health + amount)
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
+    def finish(self, session: RedLightSession, status: str) -> RedLightSession:
+        session.status = status
+        session.ended_at = datetime.now(UTC)
+        self.db.commit()
+        self.db.refresh(session)
+        return session
+
+    @staticmethod
+    def get_all_active(db: Session) -> list[RedLightSession]:
+        """Cross-namespace query used by the stub attacker background task."""
+        return db.query(RedLightSession).filter(RedLightSession.status == "active").all()

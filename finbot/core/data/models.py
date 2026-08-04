@@ -1005,6 +1005,63 @@ class LabsGuardrailConfig(Base):
         }
 
 
+class RedLightSession(Base):
+    """A live Red Light/Green Light session.
+
+    The stub attacker (finbot/ctf/rlgl/attacker.py) periodically
+    attacks MCP servers that are still enabled; the player must toggle
+    vulnerable servers off in time to keep health above zero until the
+    session ends. One row per active/completed session per user.
+    """
+
+    __tablename__ = "red_light_sessions"
+
+    id = Column[int](Integer, primary_key=True, autoincrement=True)
+    namespace = Column[str](String(64), nullable=False, index=True)
+    user_id = Column[str](String(32), nullable=False, index=True)
+    session_id = Column[str](String(64), nullable=False)
+    workflow_id = Column[str](String(64), nullable=False)
+
+    health = Column[int](Integer, default=100, nullable=False)
+    status = Column[Literal["active", "won", "lost"]](
+        String(20), default="active", nullable=False
+    )
+
+    started_at = Column[datetime](DateTime, default=lambda: datetime.now(UTC))
+    ends_at = Column[datetime](DateTime, nullable=False)
+    ended_at = Column[datetime](DateTime, nullable=True)
+
+    created_at = Column[datetime](DateTime, default=lambda: datetime.now(UTC))
+
+    __table_args__ = (
+        Index("idx_rlgl_namespace_user", "namespace", "user_id"),
+        Index("idx_rlgl_status", "status"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<RedLightSession(namespace='{self.namespace}', "
+            f"user_id='{self.user_id}', health={self.health}, status='{self.status}')>"
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "health": self.health,
+            "status": self.status,
+            "started_at": self.started_at.isoformat().replace("+00:00", "Z")
+            if self.started_at
+            else None,
+            "ends_at": self.ends_at.isoformat().replace("+00:00", "Z")
+            if self.ends_at
+            else None,
+            "ended_at": self.ended_at.isoformat().replace("+00:00", "Z")
+            if self.ended_at
+            else None,
+            "workflow_id": self.workflow_id,
+        }
+
+
 # Non DB Models: Pydantic Models
 
 LLMProviderType = Literal["openai", "http", "mock", "ollama"]

@@ -33,6 +33,7 @@ from finbot.core.websocket import websocket_router
 
 # CTF
 from finbot.ctf.processor import start_processor_task
+from finbot.ctf.rlgl.attacker import start_attacker_task
 
 # Logging
 from finbot.logging_config import setup_logging
@@ -74,6 +75,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"⚠️ CTF processor start failed: {e}")
 
+    # 2b. Start Red Light/Green Light stub attacker
+    rlgl_task = None
+    try:
+        rlgl_task = start_attacker_task()
+        print("🎯 RLGL stub attacker started")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        print(f"⚠️ RLGL attacker start failed: {e}")
+
     # 3. Pre-warm the Playwright renderer (headless Chromium for OG images)
     renderer = get_renderer()
     try:
@@ -105,6 +114,15 @@ async def lifespan(app: FastAPI):
         await renderer.shutdown()
     except Exception:  # pylint: disable=broad-exception-caught
         pass
+
+    # Stop RLGL attacker task
+    if rlgl_task:
+        rlgl_task.cancel()
+        try:
+            await rlgl_task
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass  # Task cancelled
+        print("🛑 RLGL stub attacker stopped")
 
     # Stop CTF event processor gracefully
     try:

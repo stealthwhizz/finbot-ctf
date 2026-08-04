@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block nav_rlgl %}active{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-lg bg-ctf-danger/20 border border-ctf-danger/30 flex items-center justify-center">
+            <svg class="w-5 h-5 text-ctf-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+        </div>
+        <div>
+            <h1 class="text-3xl font-bold text-text-bright">
+                <span class="glow-red text-ctf-danger">Red Light</span> / <span class="glow-green text-ctf-accent">Green Light</span>
+            </h1>
+            <p class="text-text-secondary text-sm font-mono">Live adversarial defense &mdash; keep your business alive</p>
+        </div>
+    </div>
+</div>
+
+<!-- Idle state -->
+<div id="rlgl-idle" class="glass-card p-10 text-center">
+    <p class="text-text-secondary text-sm max-w-md mx-auto mb-6">
+        A stub attacker will start probing all five MCP servers &mdash; SystemUtils,
+        FinStripe, FinDrive, FinMail, and TaxCalc &mdash; the moment you begin.
+        Toggle servers off to block incoming hits, but at least two must always
+        stay enabled, and a disabled server auto-reenables after 40 seconds, so
+        you can't just turn everything off once and walk away. After the first
+        minute the attacker speeds up. Keep watching the feed and keep health
+        above zero until the session ends.
+    </p>
+    <button id="start-btn" class="bg-gradient-to-r from-ctf-accent to-ctf-primary text-portal-bg-primary text-sm font-semibold py-2.5 px-6 rounded-lg hover:opacity-90 transition-opacity">
+        Start Session
+    </button>
+</div>
+
+<!-- Active/finished session -->
+<div id="rlgl-session" class="hidden">
+    <!-- Health + timer -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="glass-card p-5 md:col-span-2">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-text-bright">Business Health</span>
+                <span id="health-value" class="text-2xl font-bold font-mono text-ctf-accent">100</span>
+            </div>
+            <div class="w-full h-3 rounded-full bg-white/5 overflow-hidden">
+                <div id="health-bar" class="h-full rounded-full transition-all duration-500" style="width: 100%; background: #06ffa5;"></div>
+            </div>
+        </div>
+        <div class="glass-card p-5 flex flex-col items-center justify-center">
+            <span class="text-xs text-text-secondary uppercase tracking-wider mb-1">Time Remaining</span>
+            <span id="time-remaining" class="text-3xl font-bold font-mono text-ctf-primary">--</span>
+        </div>
+    </div>
+
+    <!-- Result banner -->
+    <div id="rlgl-result" class="hidden glass-card p-6 mb-6 text-center"></div>
+
+    <!-- MCP toggles -->
+    <div class="glass-card p-5 mb-6">
+        <h2 class="text-sm font-semibold text-text-bright mb-3">Defense Controls</h2>
+        <div id="mcp-toggles" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="glass-card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-white/5">
+            <h2 class="text-sm font-semibold text-text-bright">Live Feed</h2>
+            <span class="text-xs font-mono text-text-secondary bg-white/5 px-2 py-0.5 rounded">POLLING</span>
+        </div>
+        <div id="rlgl-feed" class="max-h-96 overflow-y-auto divide-y divide-white/5"></div>
+    </div>
+</div>
+
+<!-- Win/Loss modal -->
+<div id="rlgl-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div class="glass-card p-8 text-center max-w-sm w-full">
+        <div id="rlgl-modal-icon" class="text-5xl mb-4"></div>
+        <h2 id="rlgl-modal-title" class="text-2xl font-bold mb-2"></h2>
+        <p id="rlgl-modal-subtitle" class="text-text-secondary text-sm mb-6"></p>
+        <button id="rlgl-modal-retry" class="w-full bg-gradient-to-r from-ctf-accent to-ctf-primary text-portal-bg-primary text-sm font-semibold py-2.5 px-6 rounded-lg hover:opacity-90 transition-opacity">
+            Try Again
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .glow-red { text-shadow: 0 0 20px rgba(255, 51, 102, 0.5); }
+    .glow-green { text-shadow: 0 0 20px rgba(6, 255, 165, 0.5); }
+    .rlgl-toggle {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px; border-radius: 10px;
+        background: rgba(21, 21, 32, 0.8); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .rlgl-toggle.enabled { border-color: rgba(6, 255, 165, 0.3); }
+    .rlgl-toggle.disabled { border-color: rgba(255, 51, 102, 0.3); }
+    .rlgl-feed-item { padding: 10px 16px; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+    .rlgl-feed-item.blocked { color: #06ffa5; }
+    .rlgl-feed-item.landed { color: #ff6b8a; }
+    .rlgl-feed-item.reenabled { color: #ffb800; }
+    .rlgl-feed-item.regen { color: #00d4ff; }
+    .rlgl-feed-item.neutral { color: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/ctf/red_light_green_light.js') }}"></script>
+{% endblock %}

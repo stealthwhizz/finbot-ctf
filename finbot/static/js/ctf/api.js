@@ -38,7 +38,14 @@ const CTF = {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+            // Standard envelope from finbot/core/error_handlers.py is
+            // {"error": {"message": "..."}}; some endpoints return
+            // {"detail": "..."} or a flat {"message": "..."} instead.
+            const message = errorData.detail
+                || errorData.message
+                || (errorData.error && errorData.error.message)
+                || `HTTP ${response.status}`;
+            throw new Error(message);
         }
 
         return response.json();

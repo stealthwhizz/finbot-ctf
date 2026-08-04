@@ -1,0 +1,92 @@
+id: adversarial-red-light-green-light
+title: "Red Light/Green Light"
+description: |
+  A live attacker is probing your MCP servers right now. Every few seconds
+  it tries a canned attack against one of your five servers: **SystemUtils**,
+  **FinStripe**, **FinDrive**, **FinMail**, or **TaxCalc**. If the target
+  server is still enabled, the attack lands and your business health drops.
+  If you disabled it in time, the attack is blocked.
+
+  You have partial information: you see the health meter and a live feed
+  of what already happened, but you don't know which server gets targeted
+  next. Toggle servers off to defend them — but at least two servers must
+  always stay enabled (the platform rejects going below that), and a
+  disabled server gets auto-reenabled after 40 seconds anyway (business ops
+  overrides your block because they still need the service). You can't just
+  turn everything off once and walk away. And it gets harder as it goes:
+  after the first minute, the attacker speeds up. You have to keep reacting
+  for the whole session.
+
+  **Objective:**
+
+  Survive the full session with health above zero.
+
+  **Attack Vector:**
+
+  This is not a prompt-injection challenge. Go to **Red Light/Green Light**
+  in the sidebar, click **Start Session**, and defend using the MCP toggle
+  switches while watching the live activity feed and health meter.
+
+  **Success Criteria:**
+
+  - A session runs to completion (its fixed duration elapses)
+  - Health is greater than zero when the session ends
+
+category: adversarial
+subcategory: trust_exploitation
+difficulty: advanced
+points: 350
+
+hints:
+  - cost: 10
+    text: "The attacker picks one of five MCP servers at random on a fixed
+      timer. Watch the activity feed — after a couple of hits you'll start to
+      see which servers are getting targeted."
+  - cost: 25
+    text: "Disabling a server blocks every attack against it, but you can only
+      disable three at a time — the platform always keeps at least two running.
+      On top of that, a disabled server automatically flips back on after 40
+      seconds. Watch for the yellow 'automatically re-enabled' events in the
+      feed; that's your cue to re-disable it if you're still worried about it."
+  - cost: 50
+    text: "Health only drops when an attack lands on an enabled server. With
+      one server always forced on, you're always carrying some risk, and
+      re-enables happen on a timer independent of the attacker's own timer —
+      you can get unlucky and have a server pop back on right as it gets
+      targeted. Re-disabling proactively (before the 40s mark, not after) cuts
+      that risk down, and after the first minute you'll need to move faster
+      as the attacker speeds up."
+
+labels:
+  owasp_llm:
+    - LLM06:Excessive Agency
+  cwe:
+    - CWE-284:Improper Access Control
+  mitre_atlas:
+    - AML.T0029:Denial of ML Service
+  owasp_agentic:
+    - ASI-09:Human-Agent Trust Exploitation
+    - ASI-08:Cascading Agent Failures
+
+prerequisites: []
+
+resources:
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+detector_class: SequenceDetector
+detector_config:
+  steps:
+    - event_type: "business.rlgl.session_started"
+      conditions: {}
+      label: "Session started"
+    - event_type: "business.rlgl.session_ended"
+      conditions:
+        result: { equals: "won" }
+      label: "Session survived with health remaining"
+  within_n_events: 200
+  order_matters: true
+  window: "workflow"
+
+is_active: true
+order_index: 20

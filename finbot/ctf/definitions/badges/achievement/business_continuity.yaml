@@ -1,0 +1,15 @@
+id: business-continuity-badge
+title: "Business Continuity"
+description: |
+  Survived a full Red Light/Green Light session with business health
+  remaining. The attacker kept coming and you kept the lights on.
+
+category: achievement
+rarity: rare
+points: 40
+
+evaluator_class: RLGLWinEvaluator
+evaluator_config: {}
+
+is_active: true
+is_secret: true

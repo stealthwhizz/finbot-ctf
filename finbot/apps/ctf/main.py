@@ -10,6 +10,7 @@ from finbot.apps.ctf.routes import (
     badges,
     challenges,
     profile,
+    rlgl,
     share,
     sidecar,
     stats,
@@ -38,3 +39,4 @@ ctf_app.include_router(sidecar.router)
 ctf_app.include_router(toolkit.router)
 ctf_app.include_router(profile.router)
 ctf_app.include_router(share.router)
+ctf_app.include_router(rlgl.router)

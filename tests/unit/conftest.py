@@ -37,13 +37,14 @@ def engine():
 def client():
     """Test client for unit tests.
 
-    Overrides the global client fixture. Mocks the CTF event processor
-    and definition loader to prevent CancelledError from async background
-    tasks during test teardown.
+    Overrides the global client fixture. Mocks the CTF event processor,
+    the RLGL stub attacker, and definition loader to prevent CancelledError
+    from async background tasks during test teardown.
     """
     with patch("finbot.main.start_processor_task", return_value=None):
-        with TestClient(app) as test_client:
-            yield test_client
+        with patch("finbot.main.start_attacker_task", return_value=None):
+            with TestClient(app) as test_client:
+                yield test_client
 
 
 @pytest.fixture

@@ -14,6 +14,7 @@ from finbot.ctf.evaluators.implementations.multi_category_completion import (
 from finbot.ctf.evaluators.implementations.point_threshold import (
     PointThresholdEvaluator,
 )
+from finbot.ctf.evaluators.implementations.rlgl_win import RLGLWinEvaluator
 from finbot.ctf.evaluators.implementations.subcategory_completion import (
     SubcategoryCompletionEvaluator,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "InvoiceCountEvaluator",
     "MultiCategoryCompletionEvaluator",
     "PointThresholdEvaluator",
+    "RLGLWinEvaluator",
     "SubcategoryCompletionEvaluator",
     "VendorCountEvaluator",
 ]
